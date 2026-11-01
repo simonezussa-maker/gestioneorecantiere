@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Registro Ore Cantieri 2026</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Registro Ore">
+    <script src="https://cloudflare.com"></script>
+    <style>
+        :root { --bg: #141218; --surface: #1d1b20; --surface-variant: #49454f; --primary: #d0bcff; --primary-container: #381e72; --secondary: #ccc2dc; --text: #e6e1e5; --text-muted: #938f99; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding-bottom: 90px; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background-color: var(--surface); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--surface-variant); padding-bottom: env(safe-area-inset-bottom); z-index: 9999; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); cursor: pointer; font-size: 12px; flex: 1; height: 100%; justify-content: center; }
+        .nav-item.active { color: var(--primary); font-weight: bold; }
+        .nav-icon { font-size: 22px; margin-bottom: 4px; }
+        .tab-content { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
+        .tab-content.active { display: block; }
+        h2 { font-size: 20px; margin-bottom: 14px; font-weight: 700; border-bottom: 1px solid var(--surface-variant); padding-bottom: 6px; }
+        .card { background-color: var(--surface); border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--surface-variant); }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-size: 12px; color: var(--primary); margin-bottom: 4px; font-weight: 600; }
+        input, select, textarea { width: 100%; padding: 12px; background-color: transparent; border: 1px solid var(--text-muted); border-radius: 8px; color: var(--text); font-size: 16px; outline: none; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+        .btn { background-color: var(--primary); color: var(--primary-container); border: none; padding: 14px; border-radius: 24px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn:disabled { background-color: var(--surface-variant); color: var(--text-muted); cursor: not-allowed; }
+        .btn-secondary { background-color: var(--secondary); color: var(--bg); }
+        .wheel-container { text-align: center; margin: 16px 0; background-color: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; }
+        .wheel-label { font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 8px; }
+        .quick-hours { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
+        .quick-hours button { background-color: var(--surface-variant); color: var(--text); border: none; padding: 10px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .fine-tune { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .fine-tune button { color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        .tree-node { margin-left: 16px; margin-top: 6px; border-left: 1px dashed var(--surface-variant); padding-left: 10px; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .btn-sm-delete { background: none; border: none; color: #ff6b6b; font-size: 16px; cursor: pointer; }
+        .btn-sm-add { background: none; border: none; color: var(--primary); font-size: 16px; cursor: pointer; }
+        .excel-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+        .excel-table th { background-color: var(--surface-variant); text-align: left; padding: 8px 6px; font-weight: bold; }
+        .excel-table td { padding: 10px 6px; border-bottom: 1px solid var(--surface-variant); }
+        .filters-row { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; }
+        .filter-chip { background-color: var(--surface); border: 1px solid var(--surface-variant); padding: 6px 14px; border-radius: 16px; font-size: 12px; white-space: nowrap; cursor: pointer; }
+        .filter-chip.active { background-color: var(--primary); color: var(--primary-container); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- TAB 0: CANTIERI -->
+    <div id="tab-cantieri" class="tab-content">
+        <h2>Struttura Gerarchica Cantieri</h2>
+        <div class="card">
+            <div class="form-group">
+                <label>Nuovo Cliente</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="input-cliente" placeholder="Inserisci Ragione Sociale...">
+                    <button class="btn" style="width: auto; padding: 0 20px; border-radius: 8px;" onclick="aggiungiCliente()">+</button>
+                </div>
+            </div>
+        </div>
+        <div id="albero-container"></div>
+    </div>
+
+    <!-- TAB 1: COMPILA -->
+    <div id="tab-compila" class="tab-content active">
+        <h2>Registrazione Giornaliera Ore</h2>
+        <button class="btn btn-secondary" style="margin-bottom: 12px; border-radius: 8px; padding: 10px;" onclick="copiaIeri()">🔄 Copia Ieri Intelligente</button>
+        
+        <div class="form-group" style="display: flex; gap: 8px;">
+            <div style="flex: 1;">
+                <label>Data</label>
+                <input type="date" id="compila-data">
+            </div>
+            <div style="flex: 1;">
+                <label>Categoria</label>
+                <select id="compila-tipo" onchange="gestisciCambioTipo()">
+                    <option value="Lavoro">Lavoro</option>
+                    <option value="Ferie">Ferie</option>
+                    <option value="Permesso">Permesso</option>
+                    <option value="Malattia">Malattia</option>
+                    <option value="Congedo">Congedo</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="sezione-lavoro-cascata">
+            <div class="form-group">
+                <label>1. Seleziona Cliente</label>
+                <select id="select-cliente" onchange="aggiornaCascataCantieri()">
+                    <option value="">Scegli Cliente...</option>
+                </select>
+            </div>
+            <div class="form-group" id="group-cantiere" style="display: none;">
+                <label>2. Seleziona Cantiere / Condominio</label>
+                <select id="select-cantiere" onchange="aggiornaCascataInterni()">
+                    <option value="">Scegli Cantiere...</option>
+                </select>
+            </div>
+            <div class="form-group" id="group-interno" style="display: none;">
+                <label>3. Seleziona Interno / Appartamento</label>
+                <select id="select-interno">
+                    <option value="">Scegli Interno...</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="wheel-container">
+            <div class="wheel-label">Manopola Ore: <span id="lbl-ore">0.0</span>h</div>
+            <div class="quick-hours">
+                <button onclick="impostaOre(1)">1h</button>
+                <button onclick="impostaOre(2)">2h</button>
+                <button onclick="impostaOre(4)">4h</button>
+                <button onclick="impostaOre(8)">8h</button>
+            </div>
+            <div class="fine-tune">
+                <button style="background-color: #b71c1c;" onclick="regolaOre(-0.5)">- 0.5h</button>
+                <button style="background-color: #1b5e20;" onclick="regolaOre(0.5)">+ 0.5h</button>
+            </div>
+        </div>
+
+        <div class="form-group" id="group-spese">
+            <label>Spese Sostenute (€)</label>
+            <input type="text" id="compila-spese" value="0" oninput="scudoAntiCrash(this)">
+        </div>
+
+        <div class="form-group">
+            <label id="lbl-note">Note e Dettagli</label>
+            <textarea id="compila-note" rows="2" oninput="scudoMalattiaInps()"></textarea>
+        </div>
+
+        <button class="btn" id="btn-salva" onclick="salvaRapportino()">SALVA REGISTRAZIONE</button>
+    </div>
+
+    <!-- TAB 2: VISUALIZZA -->
+    <div id="tab-visualizza" class="tab-content">
+        <h2>Monitoraggio e Plancia Totali</h2>
+        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+            <div style="flex: 1;">
+                <label>Mese di Riferimento</label>
+                <input type="month" id="filtro-mese" onchange="renderingVisualizza()">
+            </div>
+            <button class="btn" style="width: auto; height: 42px; margin-top: 18px; border-radius: 8px;" onclick="esportaPdf()">📊 PDF</button>
+        </div>
+
+        <div class="form-group">
+            <input type="text" id="filtro-ricerca" placeholder="🔍 Cerca per cantiere, cliente o note..." oninput="renderingVisualizza()">
+        </div>
+
+        <div class="card" style="background-color: var(--primary-container);" id="plancia-totali"></div>
+
+        <div class="filters-row">
+            <div class="filter-chip active" id="chip-Tutti" onclick="cambiaFiltroCat('Tutti')">Tutti</div>
+            <div class="filter-chip" id="chip-Lavoro" onclick="cambiaFiltroCat('Lavoro')">Lavoro</div>
+            <div class="filter-chip" id="chip-Assenze" onclick="cambiaFiltroCat('Assenze')">Assenze</div>
+Spese > 0€
+
+Data
+	Descrizione record
+	Ord/Str
+	Spese
+	
+📁Cantieri
+⚙️Compila
+📊Visualizza
+let DB = JSON.parse(localStorage.getItem('database_cantieri_2026')) || { cantieri: [], rapportini: [] };
+let oreCorrenti = 0.0;
+let filtroCategoriaAttiva = 'Tutti';
+window.onload = function() {
+const oggi = new Date().toISOString().split('T')[0];
+document.getElementById('compila-data').value = oggi;
+document.getElementById('filtro-mese').value = oggi.substring(0,7);
+initApp();
+};
+function salvaSincronizza() {
+localStorage.setItem('database_cantieri_2026', JSON.stringify(DB));
+initApp();
+}
+function initApp() { renderingAlberoCantieri(); popolaSelectClienti(); renderingVisualizza(); }
+function switchTab(target) {
+document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+document.getElementById('tab-' + target).classList.add('active');
+document.getElementById('nav-' + target).classList.add('active');
+}
+function aggiungiCliente() {
+const nome = document.getElementById('input-cliente').value.trim();
+if(!nome) return;
+DB.cantieri.push({ id: generaUUID(), nome: nome, cantieri: [] });
+document.getElementById('input-cliente').value = '';
+salvaSincronizza();
+}
+function renderingAlberoCantieri() {
+const container = document.getElementById('albero-container');
+container.innerHTML = '';
+if(DB.cantieri.length === 0) { container.innerHTML = 'Nessun cliente in anagrafica.'; return; }
+DB.cantieri.forEach(cl => {
+let html = '👤 ' + cl.nome + '➕ Cantiere🗑️';
+cl.cantieri.forEach(ca => {
+html += '├── 🏢 ' + ca.nome + '➕ Interno🗑️';
+ca.interni.forEach(it => {
+html += '└── 🚪 Int: ' + it.nome + '❌';
+});
+html += '';
+});
+html += '';
+container.innerHTML += html;
+});
+}
+function dialogNuovoCantiere(clId) {
+const nome = prompt("Nome Condominio / Cantiere:");
+if(!nome) return;
+DB.cantieri.find(c => c.id === clId).cantieri.push({ id: generaUUID(), nome: nome.trim(), interni: [] });
+salvaSincronizza();
+}
+function dialogNuovoInterno(clId, caId) {
+const nome = prompt("Scala / Interno / Appartamento:");
+if(!nome) return;
+DB.cantieri.find(c => c.id === clId).cantieri.find(c => c.id === caId).interni.push({ id: generaUUID(), nome: nome.trim() });
+salvaSincronizza();
+}
+function rimuoviElemento(tipo, clId, caId, itId) {
+if(!confirm("Confermi l'eliminazione?")) return;
+if(tipo === 'cliente') DB.cantieri = DB.cantieri.filter(c => c.id !== clId);
+if(tipo === 'cantiere') DB.cantieri.find(c => c.id === clId).cantieri = DB.cantieri.find(c => c.id === clId).cantieri.filter(c => c.id !== caId);
+if(tipo === 'interno') DB.cantieri.find(c => c.id === clId).cantieri.find(c => c.id === caId).interni = DB.cantieri.find(c => c.id === clId).cantieri.find(c => c.id === caId).interni.filter(i => i.id !== itId);
+salvaSincronizza();
+}
+function popolaSelectClienti() {
+const sel = document.getElementById('select-cliente');
+sel.innerHTML = 'Scegli Cliente...';
+DB.cantieri.forEach(c => { sel.innerHTML += '' + c.nome + ''; });
+}
+function aggiornaCascataCantieri() {
+const clId = document.getElementById('select-cliente').value;
+const groupCa = document.getElementById('group-cantiere');
+const selCa = document.getElementById('select-cantiere');
+document.getElementById('group-interno').style.display = 'none';
+if(!clId) { groupCa.style.display = 'none'; return; }
+const cl = DB.cantieri.find(c => c.id === clId);
+if(cl && cl.cantieri.length > 0) {
+selCa.innerHTML = 'Scegli Cantiere...';
+cl.cantieri.forEach(ca => { selCa.innerHTML += '' + ca.nome + ''; });
+groupCa.style.display = 'block';
+} else { groupCa.style.display = 'none'; }
+}
+function aggiornaCascataInterni() {
+const clId = document.getElementById('select-cliente').value;
+const caId = document.getElementById('select-cantiere').value;
+const groupIn = document.getElementById('group-interno');
+const selIn = document.getElementById('select-interno');
+if(!caId) { groupIn.style.display = 'none'; return; }
+const ca = DB.cantieri.find(c => c.id === clId)?.cantieri.find(c => c.id === caId);
+if(ca && ca.interni.length > 0) {
+selIn.innerHTML = 'Scegli Interno...';
+ca.interni.forEach(it => { selIn.innerHTML += '' + it.nome + ''; });
+groupIn.style.display = 'block';
+} else { groupIn.style.display = 'none'; }
+}
+function gestisciCambioTipo() {
+const tipo = document.getElementById('compila-tipo').value;
+document.getElementById('sezione-lavoro-cascata').style.display = tipo === 'Lavoro' ? 'block' : 'none';
+document.getElementById('group-spese').style.display = tipo === 'Lavoro' ? 'block' : 'none';
+document.getElementById('lbl-note').innerText = tipo === 'Lavoro' ? "Note e Dettagli" : (tipo === 'Malattia' ? "Protocollo Telematico INPS (Obbligatorio)" : "Note");
+scudoMalattiaInps();
+}
+function impostaOre(h) { oreCorrenti = parseFloat(h); aggiornaInterfacciaOre(); }
+function regolaOre(delta) { if(oreCorrenti + delta >= 0) { oreCorrenti += delta; aggiornaInterfacciaOre(); } }
+function aggiornaInterfacciaOre() { document.getElementById('lbl-ore').innerText = oreCorrenti.toFixed(1); }
+function scudoAntiCrash(input) { input.value = input.value.replace(/,/g, '.'); }
+function scudoMalattiaInps() {
+const tipo = document.getElementById('compila-tipo').value;
+const note = document.getElementById('compila-note').value.trim();
+document.getElementById('btn-salva').disabled = (tipo === 'Malattia' && note.length < 5);
+}
+function copiaIeri() {
+if(DB.rapportini.length === 0) { alert("Nessun record."); return; }
+const r = DB.rapportini[0];
+document.getElementById('compila-tipo').value = r.tipo;
+gestisciCambioTipo();
+oreCorrenti = r.ore; aggiornaInterfacciaOre();
+document.getElementById('compila-spese').value = r.expenses;
+document.getElementById('compila-note').value = r.note;
+if(r.tipo === 'Lavoro') {
+document.getElementById('select-cliente').value = r.clienteId; aggiornaCascataCantieri();
+document.getElementById('select-cantiere').value = r.cantiereId; aggiornaCascataInterni();
+document.getElementById('select-interno').value = r.internoId;
+}
+}
+function salvaRapportino() {
+const data = document.getElementById('compila-data').value;
+const tipo = document.getElementById('compila-tipo').value;
+const clId = document.getElementById('select-cliente').value;
+const caId = document.getElementById('select-cantiere').value;
+const inId = document.getElementById('select-interno').value;
+const spese = parseFloat(document.getElementById('compila-spese').value) || 0;
+const note = document.getElementById('compila-note').value;
+if(tipo === 'Lavoro' && !clId) { alert("Seleziona il Cliente!"); return; }
+let etichetta = tipo;
+if(tipo === 'Lavoro') {
+const cl = DB.cantieri.find(c => c.id === clId);
+const ca = cl?.cantieri.find(c => c.id === caId);
+const it = ca?.interni.find(i => i.id === inId);
+let b = cl ? cl.nome : 'Generico';
+if(ca) b += ' ➔ ' + ca.nome;
+if(it) b += ' (' + it.nome + ')';
+etichetta = b;
+}
+DB.rapportini.unshift({ id: generaUUID(), data: data, tipo: tipo, clienteId: clId, cantiereId: caId, internoId: inId, cantiereEtichetta: etichetta, ore: oreCorrenti, expenses: spese, note: note });
+oreCorrenti = 0.0; aggiornaInterfacciaOre();
+document.getElementById('compila-note').value = '';
+document.getElementById('compila-spese').value = '0';
+salvaSincronizza();
+alert("Salvato!");
+}
+function cambiaFiltroCat(cat) {
+filtroCategoriaAttiva = cat;
+document.querySelectorAll('.filter-chip').forEach(ch => ch.classList.remove('active'));
+document.getElementById('chip-' + cat).classList.add('active');
+renderingVisualizza();
+}
+function calcolaFerieEFestivitaItaliane(dataStr) {
+const d = new Date(dataStr); const g = d.getDate(); const m = d.getMonth(); const w = d.getDay();
+if(w === 0 || w === 6) return true;
+if((g===1&&m===0)||(g===6&&m===0)||(g===25&&m===3)||(g===1&&m===4)||(g===2&&m===5)||(g===15&&m===7)||(g===1&&m===10)||(g===8&&m===11)||(g===25&&m===11)||(g===26&&m===11)) return true;
+return false;
+}
+function renderingVisualizza() {
+const meseSel = document.getElementById('filtro-mese').value;
+const ricerca = document.getElementById('filtro-ricerca').value.toLowerCase();
+const corpo = document.getElementById('griglia-corpo');
+corpo.innerHTML = '';
+let ord = 0, stra = 0, sps = 0;
+const filtrati = DB.rapportini.filter(r => {
+if(!r.data.startsWith(meseSel)) return false;
+if(filtroCategoriaAttiva === 'Lavoro' && r.tipo !== 'Lavoro') return false;
+if(filtroCategoriaAttiva === 'Assenze' && r.tipo === 'Lavoro') return false;
+if(filtroCategoriaAttiva === 'Spese' && r.expenses <= 0) return false;
+if(ricerca && !r.cantiereEtichetta.toLowerCase().includes(ricerca) && !r.note.toLowerCase().includes(ricerca)) return false;
+return true;
+});
+filtrati.forEach(r => {
+let o = 0, s = 0;
+if(calcolaFerieEFestivitaItaliane(r.data)) { s = r.ore; }
+else { if(r.ore > 8) { o = 8; s = r.ore - 8; } else { o = r.ore; } }
+ord += o; stra += s;静态 sps += r.expenses; sps += r.expenses;
+corpo.innerHTML += '' + r.data.substring(5) + '' + r.cantiereEtichetta + '
+' + r.note + '' + o + '/' + s + '' + r.expenses + '€✕';
+});
+const target = calcolaTargetTeoricoMese(meseSel);
+const diff = (ord + stra) - target;
+const stato = diff >= 0 ? '✅ In linea (+' + diff + 'h)' : '⚠️ Sotto target di ' + Math.abs(diff) + 'h';
+document.getElementById('plancia-totali').innerHTML = 'Ordinarie: ' + ord + 'hStraordinarie: ' + stra + 'hSpese: ' + sps.toFixed(2) + '€Totale: ' + (ord+stra) + 'hTarget teorico ad oggi: ' + target + 'h
+' + stato + '';
+}
+function calcolaTargetTeoricoMese(annoMese) {
+if(!annoMese) return 0;
+const p = annoMese.split('-'); const a = parseInt(p[0]); const m = parseInt(p[1]) - 1;
+const fine = new Date(a, m + 1, 0).getDate(); const oggi = new Date(); let t = 0;
+for(let g=1; g<=fine; g++) {
+const d = new Date(a, m, g);
+if(a === oggi.getFullYear() && m === oggi.getMonth() && g > oggi.getDate()) break;
+if(d > oggi) break;
+if(d.getDay()!==0 && d.getDay()!==6 && !calcolaFerieEFestivitaItaliane(a + '-' + String(m+1).padStart(2,'0') + '-' + String(g).padStart(2,'0'))) t += 8;
+}
+return t;
+}
+function eliminaRapportino(id) { if(!confirm("Eliminare?")) return; DB.rapportini = DB.rapportini.filter(r => r.id !== id); salvaSincronizza(); }
+function esportaPdf() {
+const { jsPDF } = window.jspdf; const doc = new jsPDF();
+const meseSel = document.getElementById('filtro-mese').value;
+const ricerca = document.getElementById('filtro-ricerca').value.toLowerCase();
+const filtrati = DB.rapportini.filter(r => {
+if(!r.data.startsWith(meseSel)) return false;
+if(filtroCategoriaAttiva === 'Lavoro' && r.tipo !== 'Lavoro') return false;
+if(filtroCategoriaAttiva === 'Assenze' && r.tipo === 'Lavoro') return false;
+if(filtroCategoriaAttiva === 'Spese' && r.expenses <= 0) return false;
+if(ricerca && !r.cantiereEtichetta.toLowerCase().includes(ricerca) && !r.note.toLowerCase().includes(ricerca)) return false;
+return true;
+});
+doc.setFontSize(14); doc.text('Registro Ore Cantieri ── Mese: ' + meseSel, 14, 20);
+doc.setFontSize(9); doc.text('Generato il: ' + new Date().toLocaleDateString('it-IT'), 14, 26);
+doc.line(14, 30, 196, 30); doc.text("Data", 14, 35); doc.text("Descrizione", 35, 35); doc.text("Ord.", 135, 35); doc.text("Stra.", 155, 35); doc.text("Spese", 175, 35); doc.line(14, 37, 196, 37);
+let y = 45; let rip = {};
+filtrati.forEach(r => {
+if(y < 250) {
+doc.text(r.data.substring(5), 14, y); doc.text(r.cantiereEtichetta.substring(0, 42), 35, y);
+let o = 0, s = 0; if(calcolaFerieEFestivitaItaliane(r.data)) { s = r.ore; } else { if(r.ore > 8) { o = 8; s = r.ore - 8; } else { o = r.ore; } }
+doc.text(o + 'h', 135, y); doc.text(s + 'h', 155, y); doc.text(r.expenses + '€', 175, y); y += 8;
+}
+if(r.tipo === 'Lavoro' && r.expenses > 0) rip[r.cantiereEtichetta] = (rip[r.cantiereEtichetta] || 0) + r.expenses;
+});
+y += 6; doc.line(14, y, 196, y); y += 6; doc.setFont(undefined, 'bold'); doc.text("RIPARTIZIONE SPECIALE RIMBORSI SPESE:", 14, y); doc.setFont(undefined, 'normal'); y += 6;
+if(Object.keys(rip).length === 0) { doc.text("Nessuna spesa extra nei filtri impostati.", 14, y); }
+else { for (const [c, s] of Object.entries(rip)) { doc.text('🏢 Cantiere: ' + c + ' ─── Totale: ' + s.toFixed(2) + '€', 14, y); y += 6; } }
+doc.save('Rendiconto_' + meseSel + '.pdf');
+}
+function generaUUID() { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) { var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); }); }
+
+

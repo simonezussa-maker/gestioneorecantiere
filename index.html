@@ -3,339 +3,329 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Registro Ore Cantieri 2026</title>
+    <title>Registro Ore e Cantieri</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Registro Ore">
-    <script src="https://cloudflare.com"></script>
+    <meta name="apple-mobile-web-app-title" content="Ore Cantieri">
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="manifest" href="manifest.json">
     <style>
-        :root { --bg: #141218; --surface: #1d1b20; --surface-variant: #49454f; --primary: #d0bcff; --primary-container: #381e72; --secondary: #ccc2dc; --text: #e6e1e5; --text-muted: #938f99; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
-        body { background-color: var(--bg); color: var(--text); padding-bottom: 95px; min-height: 100vh; overflow-y: scroll; }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background-color: var(--surface); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--surface-variant); padding-bottom: env(safe-area-inset-bottom); z-index: 9999; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); cursor: pointer; font-size: 12px; flex: 1; height: 100%; justify-content: center; background: none; border: none; }
+        :root {
+            --bg-color: #0F141C;
+            --surface: #161D27;
+            --surface-variant: #1E2732;
+            --primary: #64B5F6;
+            --primary-container: #1565C0;
+            --secondary: #81C784;
+            --text-main: #E0E0E0;
+            --text-muted: #9E9E9E;
+            --danger: #E53935;
+            --warning: #FDD835;
+        }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent; 
+        }
+        input, select, textarea {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+        body, .container, .modal-content, #listaClienti {
+            -webkit-overflow-scrolling: touch;
+        }
+        body { 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            padding-bottom: 80px; 
+            overscroll-behavior-y: none;
+        }
+        header { 
+            background-color: var(--surface); 
+            padding: env(safe-area-inset-top, 16px) 16px 16px 16px; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            border-bottom: 1px solid var(--surface-variant); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        header h1 { font-size: 18px; color: var(--primary); }
+        .container { padding: 16px; max-width: 600px; margin: 0 auto; }
+        .tab-content { 
+            display: none; 
+            will-change: opacity;
+        }
+        .tab-content.active { 
+            display: block; 
+            animation: fadeIn 0.25s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        nav { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            background-color: var(--surface-variant); 
+            display: flex; 
+            justify-content: space-around; 
+            padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px)) 0; 
+            border-top: 1px solid #2A3642; 
+            z-index: 1000; 
+        }
+        .nav-item { background: none; border: none; color: var(--text-muted); font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
         .nav-item.active { color: var(--primary); font-weight: bold; }
-        .nav-icon { font-size: 24px; margin-bottom: 4px; }
-        .tab-content { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
-        .tab-content.active { display: block; }
-        h2 { font-size: 20px; margin-bottom: 14px; font-weight: 700; border-bottom: 1px solid var(--surface-variant); padding-bottom: 6px; }
-        .card { background-color: var(--surface); border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--surface-variant); }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; font-size: 12px; color: var(--primary); margin-bottom: 4px; font-weight: 600; }
-        input, select, textarea { width: 100%; padding: 12px; background-color: transparent; border: 1px solid var(--text-muted); border-radius: 8px; color: var(--text); font-size: 16px; outline: none; }
-        input:focus, select:focus, textarea:focus { border-color: var(--primary); }
-        .btn { background-color: var(--primary); color: var(--primary-container); border: none; padding: 14px; border-radius: 24px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; }
-        .btn:disabled { background-color: var(--surface-variant); color: var(--text-muted); cursor: not-allowed; opacity: 0.6; }
-        .btn-secondary { background-color: var(--secondary); color: var(--bg); }
-        .wheel-container { text-align: center; margin: 16px 0; background-color: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px dashed var(--surface-variant); }
-        .wheel-label { font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 8px; }
-        .quick-hours { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
-        .quick-hours button { background-color: var(--surface-variant); color: var(--text); border: none; padding: 10px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .fine-tune { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .fine-tune button { color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
-        .tree-node { margin-left: 16px; margin-top: 6px; border-left: 1px dashed var(--surface-variant); padding-left: 10px; }
-        .flex-between { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
-        .btn-sm-delete { background: none; border: none; color: #ff6b6b; font-size: 14px; cursor: pointer; }
-        .btn-sm-add { background: none; border: none; color: var(--primary); font-size: 14px; cursor: pointer; }
-        .excel-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
-        .excel-table th { background-color: var(--surface-variant); text-align: left; padding: 8px 6px; font-weight: bold; }
-        .excel-table td { padding: 10px 6px; border-bottom: 1px solid var(--surface-variant); }
-        .filters-row { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; margin-bottom: 10px; }
-        .filter-chip { background-color: var(--surface); border: 1px solid var(--surface-variant); padding: 6px 14px; border-radius: 16px; font-size: 12px; white-space: nowrap; cursor: pointer; }
-        .filter-chip.active { background-color: var(--primary); color: var(--primary-container); font-weight: bold; }
-        .plancia-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
-        .plancia-box { background: var(--surface); padding: 10px; border-radius: 8px; border: 1px solid var(--surface-variant); text-align: center; }
-        .plancia-box div { font-size: 18px; font-weight: bold; color: var(--primary); margin-top: 4px; }
+        .card { background-color: var(--surface); border-radius: 12px; padding: 14px; margin-bottom: 12px; border: 1px solid var(--surface-variant); }
+        .btn { background-color: var(--primary); color: #000; border: none; padding: 12px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 14px; text-align: center; display: inline-block; }
+        .btn-secondary { background-color: var(--secondary); color: #000; }
+        .btn-container { background-color: var(--primary-container); color: #fff; }
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+        input, select, textarea { width: 100%; padding: 12px; margin: 6px 0 12px 0; background-color: var(--bg-color); border: 1px solid var(--surface-variant); border-radius: 8px; color: var(--text-main); font-size: 14px; }
+        label { font-size: 12px; color: var(--text-muted); font-weight: bold; }
+        .row { display: flex; gap: 8px; }
+        .row > * { flex: 1; }
+        .chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 8px; -webkit-overflow-scrolling: touch; }
+        .chip { background-color: var(--surface-variant); border: 1px solid var(--primary); color: var(--text-main); padding: 8px 14px; border-radius: 16px; font-size: 12px; white-space: nowrap; cursor: pointer; }
+        .chip.selected { background-color: var(--primary); color: #000; font-weight: bold; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background: var(--surface); padding: 20px; border-radius: 12px; width: 100%; max-width: 400px; border: 1px solid var(--surface-variant); }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .text-sm { font-size: 12px; color: var(--text-muted); }
+        .text-green { color: var(--secondary); }
+        .text-yellow { color: var(--warning); }
+        .text-red { color: var(--danger); }
+        .mt-2 { margin-top: 8px; }
     </style>
 </head>
 <body>
 
-    <!-- TAB 0: CANTIERI -->
-    <div id="tab-cantieri" class="tab-content">
-        <h2>Struttura Gerarchica Cantieri</h2>
-        <div class="card">
-            <div class="form-group">
-                <label>Nuovo Cliente</label>
-                <div style="display: flex; gap: 8px;">
-                    <input type="text" id="input-cliente" placeholder="Inserisci Ragione Sociale..." autocapitalize="words">
-                    <button class="btn" style="width: auto; padding: 0 20px; border-radius: 8px;" onclick="aggiungiCliente()">+</button>
+    <header>
+        <h1 id="headerTitle">Registro Ore & Cantieri (iOS PWA)</h1>
+        <button class="btn btn-outline" style="width: auto; padding: 6px 10px; font-size: 11px;" onclick="apriModalOperaio()">Profilo</button>
+    </header>
+
+    <div class="container">
+        <!-- TAB 0: ANAGRAFICA -->
+        <div id="tab-anagrafica" class="tab-content">
+            <div class="flex-between" style="margin-bottom: 12px;">
+                <h2 style="font-size: 20px; color: var(--primary);">Struttura Registri</h2>
+                <button class="btn" style="width: auto;" onclick="mostraModalCliente(true)">+ Cliente</button>
+            </div>
+            <div class="row" style="margin-bottom: 12px;">
+                <button class="btn btn-container" style="font-size: 11px;" onclick="esportaJSON()">Esporta Backup</button>
+                <button class="btn btn-secondary" style="font-size: 11px; color:#000;" onclick="document.getElementById('importFile').click()">Ripristina Backup</button>
+                <input type="file" id="importFile" style="display:none" accept=".json" onchange="importaJSON(event)">
+            </div>
+            <div id="listaClienti"></div>
+        </div>
+
+        <!-- TAB 1: COMPILA -->
+        <div id="tab-compila" class="tab-content active">
+            <div class="flex-between" style="margin-bottom: 10px;">
+                <h2 style="font-size: 20px; color: var(--primary);">Nuovo Rapportino</h2>
+                <input type="date" id="dataRapportino" style="width: auto; margin:0; padding:8px;" onchange="aggiornaDataSelezionata()">
+            </div>
+
+            <div id="boxFrequenti" style="display:none;">
+                <label>Frequenti di recente:</label>
+                <div class="chips" id="chipsFrequenti"></div>
+            </div>
+
+            <button class="btn btn-container" style="margin-bottom: 8px; font-size: 12px;" onclick="copiaUltimoRapportino()">Copia Configurazione Precedente</button>
+
+            <label>Tipologia Giornata</label>
+            <div class="chips" id="chipsTipologia">
+                <div class="chip selected" onclick="selezionaTipologia('LAVORO')">LAVORO</div>
+                <div class="chip" onclick="selezionaTipologia('MALATTIA')">MALATTIA</div>
+                <div class="chip" onclick="selezionaTipologia('FERIE')">FERIE</div>
+                <div class="chip" onclick="selezionaTipologia('PERMESSO')">PERMESSO</div>
+                <div class="chip" onclick="selezionaTipologia('CONGEDO')">CONGEDO</div>
+            </div>
+
+            <div id="campiLavoro">
+                <label>Cliente *</label>
+                <select id="selectCliente" onchange="aggiornaCantieri()"></select>
+
+                <label>Cantiere *</label>
+                <select id="selectCantiere" onchange="aggiornaInterni()"></select>
+
+                <label>Interno / Appartamento</label>
+                <select id="selectInterno"></select>
+            </div>
+
+            <div class="card" style="background-color: var(--surface-variant);">
+                <div class="flex-between">
+                    <div>
+                        <span id="oreLabel" style="font-size: 26px; font-weight: bold; color: var(--secondary);">8.0h</span>
+                    </div>
+                    <div style="display:flex; gap: 8px;">
+                        <button class="btn btn-outline" style="width: 44px; height: 44px; padding:0;" onclick="aggiungiOre(-0.5)">-</button>
+                        <button class="btn btn-outline" style="width: 44px; height: 44px; padding:0;" onclick="aggiungiOre(0.5)">+</button>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <button class="btn btn-container" onclick="impostaOre(1)">1h</button>
+                    <button class="btn btn-container" onclick="impostaOre(2)">2h</button>
+                    <button class="btn btn-container" onclick="impostaOre(4)">4h</button>
+                    <button class="btn btn-container" onclick="impostaOre(8)">8h</button>
                 </div>
             </div>
+
+            <div id="campoSpese">
+                <label>Spese Anticipate (€)</label>
+                <input type="number" id="inputSpese" value="0.0" step="0.5">
+            </div>
+
+            <label>Note di Cantiere</label>
+            <input type="text" id="inputNote" placeholder="Inserisci note...">
+
+            <button class="btn btn-secondary mt-2" onclick="registraRapportino()">REGISTRA NEL DATABASE</button>
         </div>
-        <div id="albero-container" class="card"></div>
+
+        <!-- TAB 2: PLANCIA -->
+        <div id="tab-plancia" class="tab-content">
+            <div class="flex-between">
+                <h2 style="font-size: 20px; color: var(--primary);">Plancia Analitica</h2>
+                <span id="nomeOperaioDisplay" class="text-sm text-green" onclick="apriModalOperaio()" style="cursor:pointer;">Operaio</span>
+            </div>
+
+            <div class="row mt-2" style="align-items: center;">
+                <button class="btn btn-outline" style="padding:8px;" onclick="cambiaMese(-1)">◀</button>
+                <span id="labelMeseAnno" style="text-align: center; font-weight: bold; font-size: 13px;">Mese Anno</span>
+                <button class="btn btn-outline" style="padding:8px;" onclick="cambiaMese(1)">▶</button>
+                <button class="btn btn-container" style="font-size: 11px; padding: 12px 4px;" onclick="verificaBuchi()">Verifica Buchi</button>
+            </div>
+
+            <div class="row mt-2">
+                <select id="filtroTipo" onchange="renderPlancia()">
+                    <option value="TUTTI">Tutti i Tipi</option>
+                    <option value="LAVORO">Lavoro</option>
+                    <option value="MALATTIA">Malattia</option>
+                    <option value="FERIE">Ferie</option>
+                    <option value="PERMESSO">Permesso</option>
+                    <option value="CONGEDO">Congedo</option>
+                </select>
+                <select id="filtroCliente" onchange="renderCantieriFiltro()">
+                    <option value="">Tutti i Clienti</option>
+                </select>
+            </div>
+
+            <input type="text" id="inputRicerca" placeholder="Cerca note o interni..." oninput="renderPlancia()">
+
+            <div class="card" style="background-color: var(--primary-container);">
+                <div class="row" style="text-align: center;">
+                    <div><span class="text-sm">ORDINARIE</span><br><strong id="totOrd">0h</strong></div>
+                    <div><span class="text-sm" style="color:var(--secondary)">STRAORDINARI</span><br><strong id="totStra" class="text-green">0h</strong></div>
+                    <div><span class="text-sm" style="color:var(--warning)">SPESE</span><br><strong id="totSpese" class="text-yellow">€0</strong></div>
+                </div>
+                <div style="margin-top: 8px;">
+                    <span id="allineamentoFeriali" class="text-sm">Allineamento: 0/0h</span>
+                    <div style="background: rgba(0,0,0,0.3); height: 6px; border-radius: 3px; margin-top: 4px; overflow:hidden;">
+                        <div id="barraProgresso" style="background: var(--secondary); width: 0%; height: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="listaRapportiniPlancia"></div>
+
+            <button class="btn btn-secondary mt-2" onclick="esportaCSV()">ESPORTA REPORT CSV / EXCEL</button>
+        </div>
     </div>
 
-    <!-- TAB 1: COMPILA -->
-    <div id="tab-compila" class="tab-content active">
-        <h2>Registrazione Giornaliera Ore</h2>
-        <button class="btn btn-secondary" style="margin-bottom: 12px; border-radius: 8px; padding: 10px;" onclick="copiaIeri()">🔄 Copia Ieri Intelligente</button>
-        
-        <div class="form-group" style="display: flex; gap: 8px;">
-            <div style="flex: 1;">
-                <label>Data</label>
-                <input type="date" id="compila-data" onchange="rilevaFestivo()">
-            </div>
-            <div style="flex: 1;">
-                <label>Categoria</label>
-                <select id="compila-tipo" onchange="gestisciCambioTipo()">
-                    <option value="Lavoro">Lavoro</option>
-                    <option value="Ferie">Ferie</option>
-                    <option value="Permesso">Permesso</option>
-                    <option value="Malattia">Malattia</option>
-                    <option value="Congedo">Congedo</option>
-                </select>
+    <!-- NAVBAR INFERIORE -->
+    <nav>
+        <button class="nav-item" onclick="cambiaTab(0, this)">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+            Anagrafica
+        </button>
+        <button class="nav-item active" onclick="cambiaTab(1, this)">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            Compila
+        </button>
+        <button class="nav-item" onclick="cambiaTab(2, this)">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z"/></svg>
+            Plancia
+        </button>
+    </nav>
+
+    <!-- MODALI -->
+    <div id="modalCliente" class="modal">
+        <div class="modal-content">
+            <h3>Nuovo Cliente</h3>
+            <input type="text" id="nomeNuovoClienteInput" placeholder="Nome Azienda / Cliente">
+            <div class="row">
+                <button class="btn btn-outline" onclick="mostraModalCliente(false)">Annulla</button>
+                <button class="btn" onclick="salvaNuovoCliente()">Salva</button>
             </div>
         </div>
-
-        <div id="sezione-lavoro-cascata">
-            <div class="form-group">
-                <label>1. Seleziona Cliente</label>
-                <select id="select-cliente" onchange="aggiornaCascataCantieri()">
-                    <option value="">Scegli Cliente...</option>
-                </select>
-            </div>
-            <div class="form-group" id="group-cantiere" style="display: none;">
-                <label>2. Seleziona Cantiere / Condominio</label>
-                <select id="select-cantiere" onchange="aggiornaCascataInterni()">
-                    <option value="">Scegli Cantiere...</option>
-                </select>
-            </div>
-            <div class="form-group" id="group-interno" style="display: none;">
-                <label>3. Seleziona Interno / Appartamento</label>
-                <select id="select-interno">
-                    <option value="">Scegli Interno...</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="wheel-container" id="container-manopola">
-            <div class="wheel-label">Manopola Ore: <span id="lbl-ore">0.0</span>h</div>
-            <div class="quick-hours">
-                <button onclick="impostaOre(1)">1h</button>
-                <button onclick="impostaOre(2)">2h</button>
-                <button onclick="impostaOre(4)">4h</button>
-                <button onclick="impostaOre(8)">8h</button>
-            </div>
-            <div class="fine-tune">
-                <button style="background-color: #b71c1c;" onclick="regolaOre(-0.5)">- 0.5h</button>
-                <button style="background-color: #1b5e20;" onclick="regolaOre(0.5)">+ 0.5h</button>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label>Spese Rimborsabili (€)</label>
-            <input type="text" id="compila-spese" placeholder="0.00" oninput="validaDecimali(this)">
-        </div>
-
-        <div class="form-group">
-            <label id="lbl-note">Note / Dettagli Sessione</label>
-            <textarea id="compila-note" rows="2" placeholder="Note libere... (Minimo 5 caratteri per protocollo INPS se in Malattia)" oninput="controllaScudoMalattia()"></textarea>
-        </div>
-
-        <button class="btn" id="btn-salva" onclick="salvaRecord()">Salva Record</button>
     </div>
 
-    <!-- TAB 2: VISUALIZZA -->
-    <div id="tab-visualizza" class="tab-content">
-        <h2>Plancia Totali & Reportistica</h2>
-        <div class="plancia-grid">
-            <div class="plancia-box">Ordinarie<div id="box-ord">0.0h</div></div>
-            <div class="plancia-box">Straordinarie<div id="box-stra">0.0h</div></div>
-            <div class="plancia-box">Rimborsi<div id="box-spese">0.00€</div></div>
-            <div class="plancia-box">Target Mensile<div id="box-target">0%</div></div>
+    <div id="modalCantiere" class="modal">
+        <div class="modal-content">
+            <h3>Nuovo Cantiere</h3>
+            <input type="text" id="nomeNuovoCantiereInput" placeholder="Nome Cantiere">
+            <div class="row">
+                <button class="btn btn-outline" onclick="chiudiModali()">Annulla</button>
+                <button class="btn" onclick="salvaNuovoCantiere()">Aggiungi</button>
+            </div>
         </div>
+    </div>
 
-        <div class="filters-row">
-Mese Corrente
-Tutti i Record
-📄 Esporta PDF Filtrato
-Svuota Registro
+    <div id="modalInterno" class="modal">
+        <div class="modal-content">
+            <h3>Nuovo Interno</h3>
+            <input type="text" id="codiceInternoInput" placeholder="Es: App. 5 o Ufficio B">
+            <div class="row">
+                <button class="btn btn-outline" onclick="chiudiModali()">Annulla</button>
+                <button class="btn" onclick="salvaNuovoInterno()">Inserisci</button>
+            </div>
+        </div>
+    </div>
 
-Data
-	Cantiere
-	Tipo
-	Ore
-	Spese
-	
-📁Cantieri
+    <div id="modalMassivo" class="modal">
+        <div class="modal-content">
+            <h3>Generatore Massivo Interni</h3>
+            <label>Prefisso</label>
+            <input type="text" id="massivoPrefisso" value="App.">
+            <div class="row">
+                <div><label>Da</label><input type="number" id="massivoDa" value="1"></div>
+                <div><label>A</label><input type="number" id="massivoA" value="45"></div>
+            </div>
+            <div class="row">
+                <button class="btn btn-outline" onclick="chiudiModali()">Annulla</button>
+                <button class="btn" onclick="eseguiGeneratoreMassivo()">Genera</button>
+            </div>
+        </div>
+    </div>
 
+    <div id="modalOperaio" class="modal">
+        <div class="modal-content">
+            <h3>Intestazione / Operaio</h3>
+            <input type="text" id="inputNomeOperaioModal" placeholder="Nome e Cognome">
+            <div class="row">
+                <button class="btn btn-outline" onclick="chiudiModali()">Annulla</button>
+                <button class="btn" onclick="salvaNomeOperaio()">Salva</button>
+            </div>
+        </div>
+    </div>
 
-✍️Compila
+    <div id="modalBuchi" class="modal">
+        <div class="modal-content">
+            <h3>Verifica Giornate Mancanti</h3>
+            <div id="contenutoBuchi" style="max-height: 200px; overflow-y: auto; margin: 10px 0;"></div>
+            <button class="btn" onclick="chiudiModali()">Ho Capito</button>
+        </div>
+    </div>
 
-
-📊Visualizza
-
-let db = JSON.parse(localStorage.getItem('registro_cantieri_db')) || { clienti: [], record: [] };
-let oreSelezionate = 0.0;
-let filtroMeseCorrente = true;
-let ultimoRecordInserito = null;
-function salvaNelStorage() { localStorage.setItem('registro_cantieri_db', JSON.stringify(db)); }
-function switchTab(tabId) {
-document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-document.getElementById('tab-' + tabId).classList.add('active');
-const idx = tabId === 'cantieri' ? 0 : tabId === 'compila' ? 1 : 2;
-document.querySelectorAll('.nav-item')[idx].classList.add('active');
-if(tabId === 'cantieri') renderAlbero();
-if(tabId === 'compila') aggiornaSelectClienti();
-if(tabId === 'visualizza') renderTabella();
-}
-function validaDecimali(input) { input.value = input.value.replace(/,/g, '.').replace(/[^0-9.]/g, ''); }
-function impostaOre(val) { oreSelezionate = parseFloat(val); aggiornaGraficaOre(); }
-function regolaOre(val) { oreSelezionate = Math.max(0, oreSelezionate + val); aggiornaGraficaOre(); }
-function aggiornaGraficaOre() { document.getElementById('lbl-ore').innerText = oreSelezionate.toFixed(1); }
-function aggiungiCliente() {
-let nome = document.getElementById('input-cliente').value.trim(); if(!nome) return;
-db.clienti.push({ id: 'CL_' + Date.now(), nome: nome, cantieri: [] });
-document.getElementById('input-cliente').value = ''; salvaNelStorage(); renderAlbero();
-}
-function aggiungiCantiere(id) {
-let nome = prompt("Nome Cantiere:"); if(!nome) return;
-let c = db.clienti.find(x => x.id === id);
-if(c) { c.cantieri.push({ id: 'CA_' + Date.now(), nome: nome, interni: [] }); salvaNelStorage(); renderAlbero(); }
-}
-function aggiungiInterno(idCli, idCan) {
-let nome = prompt("Interno/Appartamento:"); if(!nome) return;
-let c = db.clienti.find(x => x.id === idCli); let ca = c?.cantieri.find(x => x.id === idCan);
-if(ca) { ca.interni.push({ id: 'IN_' + Date.now(), nome: nome }); salvaNelStorage(); renderAlbero(); }
-}
-function eliminaNodo(tipo, id1, id2, id3) {
-if(!confirm("Eliminare definitivamente?")) return;
-if(tipo === 'cliente') db.clienti = db.clienti.filter(c => c.id !== id1);
-if(tipo === 'cantiere') { let c = db.clienti.find(x => x.id === id1); if(c) c.cantieri = c.cantieri.filter(x => x.id !== id2); }
-if(tipo === 'interno') { let c = db.clienti.find(x => x.id === id1); let ca = c?.cantieri.find(x => x.id === id2); if(ca) ca.interni = ca.interni.filter(x => x.id !== id3); }
-salvaNelStorage(); renderAlbero();
-}
-function renderAlbero() {
-let html = '';
-db.clienti.forEach(c => {
-html += <div class="flex-between"><strong>📁 ${c.nome}</strong><div><button class="btn-sm-add" onclick="aggiungiCantiere('${c.id}')">+ Cantiere</button> <button class="btn-sm-delete" onclick="eliminaNodo('cliente','${c.id}')">❌</button></div></div>;
-c.cantieri.forEach(ca => {
-html += <div class="tree-node"><div class="flex-between">🏢 ${ca.nome}<div><button class="btn-sm-add" onclick="aggiungiInterno('${c.id}','${ca.id}')">+ Int.</button> <button class="btn-sm-delete" onclick="eliminaNodo('cantiere','${c.id}','${ca.id}')">❌</button></div></div>;
-ca.interni.forEach(i => { html += <div class="tree-node flex-between">🔑 ${i.nome} <button class="btn-sm-delete" onclick="eliminaNodo('interno','${c.id}','${ca.id}','${i.id}')">❌</button></div>; });
-html += </div>;
-});
-});
-document.getElementById('albero-container').innerHTML = html || 'Nessun elemento.';
-}
-function aggiornaSelectClienti() {
-let sel = document.getElementById('select-cliente'); sel.innerHTML = 'Scegli Cliente...';
-db.clienti.forEach(c => { sel.innerHTML += <option value="${c.id}">${c.nome}</option>; });
-aggiornaCascataCantieri();
-}
-function aggiornaCascataCantieri() {
-let idCli = document.getElementById('select-cliente').value; let grp = document.getElementById('group-cantiere');
-let sel = document.getElementById('select-cantiere'); sel.innerHTML = 'Scegli Cantiere...';
-document.getElementById('group-interno').style.display = 'none';
-let c = db.clienti.find(x => x.id === idCli);
-if(c && c.cantieri.length > 0) {
-c.cantieri.forEach(ca => { sel.innerHTML += <option value="${ca.id}">${ca.nome}</option>; });
-grp.style.display = 'block';
-} else { grp.style.display = 'none'; }
-}
-function aggiornaCascataInterni() {
-let idCli = document.getElementById('select-cliente').value; let idCan = document.getElementById('select-cantiere').value;
-let grp = document.getElementById('group-interno'); let sel = document.getElementById('select-interno'); sel.innerHTML = 'Scegli Interno...';
-let c = db.clienti.find(x => x.id === idCli); let ca = c?.cantieri.find(x => x.id === idCan);
-if(ca && ca.interni.length > 0) {
-ca.interni.forEach(i => { sel.innerHTML += <option value="${i.id}">${i.nome}</option>; });
-grp.style.display = 'block';
-} else { grp.style.display = 'none'; }
-}
-function calcolaPasqua(y) {
-let a=y%19, b=Math.floor(y/100), c=y%100, d=Math.floor(b/4), e=b%4, f=Math.floor((b+8)/25), g=Math.floor((b-f+1)/3), h=(19a+b-d-g+15)%30, i=Math.floor(c/4), k=c%4, l=(32+2e+2i-h-k)%7, m=Math.floor((a+11h+22l)/451);
-let mese=Math.floor((h+l-7m+114)/31), giorno=((h+l-7*m+114)%31)+1; return {giorno:giorno, mese:mese};
-}
-function isFestivoItaliano(dObj) {
-let g=dObj.getDate(), m=dObj.getMonth()+1, y=dObj.getFullYear(), w=dObj.getDay();
-if(w===0 || w===6) return true;
-if((m===1&&g===1)||(m===1&&g===6)||(m===4&&g===25)||(m===5&&g===1)||(m===6&&g===2)||(m===8&&g===15)||(m===11&&g===1)||(m===12&&g===8)||(m===12&&g===25)||(m===12&&g===26)) return true;
-let p=calcolaPasqua(y), pq=new Date(y, p.mese-1, p.giorno+1); return (g===pq.getDate() && m===(pq.getMonth()+1));
-}
-function rilevaFestivo() {
-let dStr = document.getElementById('compila-data').value; if(!dStr) return;
-document.getElementById('container-manopola').style.backgroundColor = isFestivoItaliano(new Date(dStr)) ? "rgba(183,28,28,0.15)" : "rgba(255,255,255,0.03)";
-}
-function gestisciCambioTipo() {
-let t = document.getElementById('compila-tipo').value;
-document.getElementById('sezione-lavoro-cascata').style.display = t !== 'Lavoro' ? 'none' : 'block';
-let lbl = document.getElementById('lbl-note');
-if(t === 'Malattia') { lbl.innerText = "Protocollo Telematico INPS (OBBLIGATORIO)"; lbl.style.color = "#ff6b6b"; impostaOre(8.0); }
-else { lbl.innerText = "Note / Dettagli Sessione"; lbl.style.color = "var(--primary)"; if(t!=='Lavoro') impostaOre(8.0); else impostaOre(0.0); }
-controllaScudoMalattia();
-}
-function controllaScudoMalattia() {
-let t = document.getElementById('compila-tipo').value, n = document.getElementById('compila-note').value.trim(), b = document.getElementById('btn-salva');
-if(t === 'Malattia' && n.length < 5) { b.disabled = true; b.innerText = "Bloccato: Inserisci Protocollo"; }
-else { b.disabled = false; b.innerText = "Salva Record"; }
-}
-function copiaIeri() {
-if(!ultimoRecordInserito) { alert("Nessun record precedente."); return; }
-if(ultimoRecordInserito.tipo === 'Lavoro' && !db.clienti.find(x => x.id === ultimoRecordInserito.clienteId)) { alert("Cliente eliminato."); return; }
-document.getElementById('compila-tipo').value = ultimoRecordInserito.tipo; gestisciCambioTipo();
-if(ultimoRecordInserito.tipo === 'Lavoro') {
-document.getElementById('select-cliente').value = ultimoRecordInserito.clienteId; aggiornaCascataCantieri();
-document.getElementById('select-cantiere').value = ultimoRecordInserito.cantiereId; aggiornaCascataInterni();
-document.getElementById('select-interno').value = ultimoRecordInserito.internoId;
-}
-impostaOre(ultimoRecordInserito.oreTotali); document.getElementById('compila-spese').value = ultimoRecordInserito.spese;
-document.getElementById('compila-note').value = ultimoRecordInserito.note; rilevaFestivo(); controllaScudoMalattia();
-}
-function salvaRecord() {
-let data = document.getElementById('compila-data').value, tipo = document.getElementById('compila-tipo').value, spese = parseFloat(document.getElementById('compila-spese').value) || 0.0, note = document.getElementById('compila-note').value.trim();
-if(!data) return; let cliId='', canId='', intId='', desc=tipo;
-if(tipo === 'Lavoro') {
-cliId = document.getElementById('select-cliente').value; canId = document.getElementById('select-cantiere').value; intId = document.getElementById('select-interno').value;
-if(!cliId || !canId) { alert("Seleziona Cliente e Cantiere."); return; }
-let clN = db.clienti.find(x=>x.id===cliId).nome, caN = db.clienti.find(x=>x.id===cliId).cantieri.find(x=>x.id===canId).nome, iN = intId ? ' - '+db.clienti.find(x=>x.id===cliId).cantieri.find(x=>x.id===canId).interni.find(x=>x.id===intId).nome : '';
-desc = ${clN} ➔ ${caN}${iN};
-}
-if(oreSelezionate<=0 && (tipo==='Lavoro'||tipo==='Permesso')) return;
-let dObj = new Date(data), ord=0, stra=0;
-if(isFestivoItaliano(dObj)) { stra = oreSelezionate; } else { if(oreSelezionate>8){ ord=8; stra=oreSelezionate-8; }else{ ord=oreSelezionate; } }
-let nr = { id:'REC_'+Date.now(), data:data, tipo:tipo, clienteId:cliId, cantiereId:canId, internoId:intId, descAlbero:desc, oreTotali:oreSelezionate, ordinarie:ord, straordinarie:stra, spese:spese, note:note };
-db.record.push(nr); ultimoRecordInserito = nr; salvaNelStorage();
-document.getElementById('compila-spese').value = ''; document.getElementById('compila-note').value = ''; impostaOre(0.0); controllaScudoMalattia();
-alert("Salvato!");
-}
-function setFiltroMese(status) { filtroMeseCorrente = status; document.getElementById('chip-mese').classList.toggle('active', status); document.getElementById('chip-tutti').classList.toggle('active', !status); renderTabella(); }
-function renderTabella() {
-let q = document.getElementById('search-bar').value.toLowerCase(), tbody = document.getElementById('tabella-body'); tbody.innerHTML = '';
-let o=new Date(), yT=2026, mT=10, tot={ord:0, stra:0, sp:0};
-db.record.sort((a,b)=>new Date(b.data)-new Date(a.data)).forEach(r => {
-let d = new Date(r.data), mM=!filtroMeseCorrente||(d.getFullYear()===yT&&d.getMonth()===mT), mS=r.descAlbero.toLowerCase().includes(q)||r.note.toLowerCase().includes(q)||r.tipo.toLowerCase().includes(q);
-if(mM && mS) {
-tot.ord+=r.ordinarie; tot.stra+=r.straordinarie; tot.sp+=r.spese;
-tbody.innerHTML += <tr><td>${r.data.split('-').reverse().join('/')}</td><td><strong>${r.descAlbero}</strong><br><small>${r.note}</small></td><td>${r.tipo}</td><td>${r.oreTotali}h<br><small>${r.ordinarie}O / ${r.straordinarie}S</small></td><td>${r.spese.toFixed(2)}€</td><td><button class="btn-sm-delete" onclick="eliminaRecord('${r.id}')">❌</button></td></tr>;
-}
-});
-document.getElementById('box-ord').innerText = tot.ord.toFixed(1)+'h'; document.getElementById('box-stra').innerText = tot.stra.toFixed(1)+'h'; document.getElementById('box-spese').innerText = tot.sp.toFixed(2)+'€';
-let lim = (o.getFullYear()===yT&&o.getMonth()===mT)?o.getDate():30, lav=0;
-for(let g=1;g<=lim;g++) { if(!isFestivoItaliano(new Date(yT,mT,g))) lav++; }
-document.getElementById('box-target').innerText = (lav>0?Math.min(100,Math.round((tot.ord/(lav*8))*100)):100)+'%';
-}
-function eliminaRecord(id) { if(confirm("Eliminare?")) { db.record=db.record.filter(x=>x.id!==id); salvaNelStorage(); renderTabella(); } }
-function svuotaDatabase() { if(confirm("Cancellare tutto?")) { db.record=[]; salvaNelStorage(); renderTabella(); } }
-function esportaPDF() {
-const { jsPDF } = window.jspdf; let doc = new jsPDF(), y=36, q=document.getElementById('search-bar').value.toLowerCase(), rip={};
-doc.setFont("Helvetica","bold"); doc.setFontSize(14); doc.text("REGISTRO CANTIERI 2026",14,20);
-doc.setFontSize(10); doc.text("Data",14,y); doc.text("Cantiere",40,y); doc.text("Tipo",125,y); doc.text("Ore",155,y); doc.text("Spese",180,y);
-doc.setFont("Helvetica","normal");
-db.record.forEach(r => {
-let d=new Date(r.data), mM=!filtroMeseCorrente||(d.getFullYear()===2026&&d.getMonth()===10), mS=r.descAlbero.toLowerCase().includes(q)||r.note.toLowerCase().includes(q)||r.tipo.toLowerCase().includes(q);
-if(mM && mS) {
-y+=8; if(y>270){ doc.addPage(); y=20; }
-doc.text(r.data.split('-').reverse().join('/'),14,y); doc.text(r.descAlbero.replace(/\s*\([^)]*\)*/g,"").substring(0,40),40,y); doc.text(r.tipo,125,y); doc.text(r.oreTotali.toFixed(1)+'h',155,y); doc.text(r.spese>0?r.spese.toFixed(2):'-',180,y);
-if(r.tipo==='Lavoro'&&r.spese>0){ let splitS=r.descAlbero.split('➔'); let k=splitS[1]||r.descAlbero; k=k.trim(); rip[k]=(rip[k]||0)+r.spese; }
-}
-});
-y+=12; if(y>250){ doc.addPage(); y=20; } doc.setFont("Helvetica","bold"); doc.text("RIPARTIZIONE SPESE ANALITICA CONDOMINI:",14,y); doc.setFont("Helvetica","normal");
-for(let c in rip) { y+=6; doc.text(• ${c}:,18,y); doc.text(${rip[c].toFixed(2)} €,155,y); }
-doc.save("Registro_2026.pdf");
-}
-window.addEventListener('DOMContentLoaded', () => {
-let d = new Date(), y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), g = String(d.getDate()).padStart(2,'0');
-document.getElementById('compila-data').value = ${y}-${m}-${g}; aggiornaSelectClienti(); rilevaFestivo();
-});
-
-
+    <script src="app.js"></script>
+</body>
+</html>

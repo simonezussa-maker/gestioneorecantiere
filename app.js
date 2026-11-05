@@ -20,7 +20,37 @@
   }
   function normalizeDb(value){
     if(!value||typeof value!=='object'||!Array.isArray(value.clienti)||!Array.isArray(value.rapportini))throw Error('Formato archivio non valido');
-    return {nomeOperaio:typeof value.nomeOperaio==='string'?value.nomeOperaio:'Operaio Non Specificato',clienti:value.clienti.map(c=>({id:String(c.id||uid('cl')),nome:String(c.nome||''),cantieri:Array.isArray(c.cantieri)?c.cantieri.map(s=>({id:String(s.id||uid('ca')),nome:String(s.nome||''),stato:s.stato==='CHIUSO'?'CHIUSO':'ATTIVO',interni:Array.isArray(s.interni)?s.interni.map(r=>({id:String(r.id||uid('in')),codice:String(r.codice||'')})):[],fotoPaths:[],quadroElettrico:Array.isArray(s.quadroElettrico)?s.quadroElettrico:[],fotoData:Array.isArray(s.fotoData)?s.fotoData:[]})):[]})),rapportini:value.rapportini.map(r=>({...r,id:String(r.id||uid('rap')),data:String(r.data||''),clienteId:String(r.clienteId||'ASSENTE'),clienteNome:String(r.clienteNome||'Non Specificato'),cantiereId:r.cantiereId==null?null:String(r.cantiereId),cantiereNome:r.cantiereNome==null?null:String(r.cantiereNome),internoId:r.internoId==null?null:String(r.internoId),internoCodice:r.internoCodice==null?null:String(r.internoCodice),tipologia:TYPES.includes(r.tipologia)?r.tipologia:'LAVORO',ore:Number(r.ore)||0,note:String(r.note||''),speseAnticipate:Number(r.speseAnticipate)||0})))};
+    return {
+      nomeOperaio:typeof value.nomeOperaio==='string'?value.nomeOperaio:'Operaio Non Specificato',
+      clienti:value.clienti.map(c=>({
+        id:String(c.id||uid('cl')),
+        nome:String(c.nome||''),
+        cantieri:Array.isArray(c.cantieri)?c.cantieri.map(s=>({
+          id:String(s.id||uid('ca')),
+          nome:String(s.nome||''),
+          stato:s.stato==='CHIUSO'?'CHIUSO':'ATTIVO',
+          interni:Array.isArray(s.interni)?s.interni.map(r=>({id:String(r.id||uid('in')),codice:String(r.codice||'')})):[],
+          fotoPaths:[],
+          quadroElettrico:Array.isArray(s.quadroElettrico)?s.quadroElettrico:[],
+          fotoData:Array.isArray(s.fotoData)?s.fotoData:[]
+        })):[]
+      })),
+      rapportini:value.rapportini.map(r=>({
+        ...r,
+        id:String(r.id||uid('rap')),
+        data:String(r.data||''),
+        clienteId:String(r.clienteId||'ASSENTE'),
+        clienteNome:String(r.clienteNome||'Non Specificato'),
+        cantiereId:r.cantiereId==null?null:String(r.cantiereId),
+        cantiereNome:r.cantiereNome==null?null:String(r.cantiereNome),
+        internoId:r.internoId==null?null:String(r.internoId),
+        internoCodice:r.internoCodice==null?null:String(r.internoCodice),
+        tipologia:TYPES.includes(r.tipologia)?r.tipologia:'LAVORO',
+        ore:Number(r.ore)||0,
+        note:String(r.note||''),
+        speseAnticipate:Number(r.speseAnticipate)||0
+      }))
+    };
   }
   function validDb(value){
     try{

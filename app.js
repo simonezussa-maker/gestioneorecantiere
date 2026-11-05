@@ -1,492 +1,91 @@
-
-let db = JSON.parse(localStorage.getItem('registro_ore_db')) || {
-    nomeOperaio: "Operaio Non Specificato",
-    clienti: [],
-    rapportini: []
-};
-
-let annoSelezionato = new Date().getFullYear();
-let meseSelezionato = new Date().getMonth();
-let tipologiaAttuale = "LAVORO";
-let oreSelezionate = 8.0;
-let clienteCorrenteId = null;
-let cantiereCorrenteId = null;
-
-function salvaDB() {
-    localStorage.setItem('registro_ore_db', JSON.stringify(db));
-    renderTutto();
-}
-
-function renderTutto() {
-    document.getElementById('nomeOperaioDisplay').innerText = db.nomeOperaio;
-    renderAnagrafica();
-    renderCompilaSelects();
-    renderPlancia();
-}
-
-function cambiaTab(index, el) {
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    
-    if(index === 0) document.getElementById('tab-anagrafica').classList.add('active');
-    if(index === 1) document.getElementById('tab-compila').classList.add('active');
-    if(index === 2) { document.getElementById('tab-plancia').classList.add('active'); renderPlancia(); }
-    el.classList.add('active');
-}
-
-function renderAnagrafica() {
-    const container = document.getElementById('listaClienti');
-    container.innerHTML = '';
-    if(db.clienti.length === 0) {
-        container.innerHTML = '<p class="text-sm" style="text-align:center; padding: 20px;">Nessun cliente registrato.</p>';
-        return;
-    }
-    db.clienti.forEach(cl => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        let cantieriHtml = '';
-        cl.cantieri.forEach(ca => {
-            const chiuso = ca.stato === 'CHIUSO';
-            let interniHtml = '';
-            ca.interni.forEach(inr => {
-                interniHtml += `<div class="flex-between" style="padding: 4px 0; font-size:13px; color: ${chiuso?'gray':'var(--text-main)'}">
-                    <span>• ${inr.codice}</span>
-                    ${chiuso?'':`<span style="cursor:pointer; color:var(--danger); padding: 4px 8px;" onclick="eliminaInterno('${cl.id}','${ca.id}','${inr.id}')">✕</span>`}
-                </div>`;
-            });
-            cantieriHtml += `<div style="margin-left: 16px; margin-top: 8px; border-left: 2px solid var(--surface-variant); padding-left: 10px;">
-                <div class="flex-between">
-                    <span style="font-weight: 500; color: ${chiuso?'gray':'var(--text-main)'};">${ca.nome} ${chiuso?'(CHIUSO)':''}</span>
-                    <div>
-                        ${chiuso ? 
-                            `<span style="cursor:pointer; color:var(--secondary); font-size:12px; margin-right:8px; padding: 4px;" onclick="toggleCantiere('${cl.id}','${ca.id}','ATTIVO')">Riapri</span>` :
-                            `<span style="cursor:pointer; color:var(--primary); font-size:12px; margin-right:8px; padding: 4px;" onclick="apriModalInterno('${cl.id}','${ca.id}')">+Int</span>
-                             <span style="cursor:pointer; color:var(--secondary); font-size:12px; margin-right:8px; padding: 4px;" onclick="apriModalMassivo('${cl.id}','${ca.id}')">Massivo</span>
-                             <span style="cursor:pointer; color:var(--danger); font-size:12px; padding: 4px;" onclick="toggleCantiere('${cl.id}','${ca.id}','CHIUSO')">Chiudi</span>`
-                        }
-                    </div>
-                </div>
-                <div style="margin-top:4px;">${interniHtml || '<span class="text-sm">Nessun interno</span>'}</div>
-            </div>`;
-        });
-
-        card.innerHTML = `
-            <div class="flex-between">
-                <strong>${cl.nome}</strong>
-                <div>
-                    <span style="cursor:pointer; color:var(--secondary); margin-right:12px; padding: 4px;" onclick="apriModalCantiere('${cl.id}')">+ Cantiere</span>
-                    <span style="cursor:pointer; color:var(--danger); padding: 4px;" onclick="eliminaCliente('${cl.id}')">Elimina</span>
-                </div>
-            </div>
-            <div style="margin-top: 8px;">${cantieriHtml || '<span class="text-sm">Nessun cantiere</span>'}</div>
-        `;
-        container.appendChild(card);
-    });
-}
-
-function mostraModalCliente(mostra) { document.getElementById('modalCliente').style.display = mostra ? 'flex' : 'none'; }
-function salvaNuovoCliente() {
-    const nome = document.getElementById('nomeNuovoClienteInput').value.trim();
-    if(nome) {
-        db.clienti.push({ id: 'cl_' + Date.now(), nome: nome, cantieri: [] });
-        document.getElementById('nomeNuovoClienteInput').value = '';
-        mostraModalCliente(false);
-        salvaDB();
-    }
-}
-function eliminaCliente(id) {
-    if(confirm("Eliminare cliente e tutti i dati associati?")) {
-        db.clienti = db.clienti.filter(c => c.id !== id);
-        db.rapportini = db.rapportini.filter(r => r.clienteId !== id);
-        salvaDB();
-    }
-}
-function apriModalCantiere(clId) { clienteCorrenteId = clId; document.getElementById('modalCantiere').style.display = 'flex'; }
-function salvaNuovoCantiere() {
-    const nome = document.getElementById('nomeNuovoCantiereInput').value.trim();
-    if(nome && clienteCorrenteId) {
-        const cl = db.clienti.find(c => c.id === clienteCorrenteId);
-        if(cl) cl.cantieri.push({ id: 'ca_' + Date.now(), nome: nome, interni: [], stato: 'ATTIVO' });
-        document.getElementById('nomeNuovoCantiereInput').value = '';
-        chiudiModali();
-        salvaDB();
-    }
-}
-function toggleCantiere(clId, caId, stato) {
-    const cl = db.clienti.find(c => c.id === clId);
-    if(cl) { const ca = cl.cantieri.find(c => c.id === caId); if(ca) ca.stato = stato; }
-    salvaDB();
-}
-function apriModalInterno(clId, caId) { clienteCorrenteId = clId; cantiereCorrenteId = caId; document.getElementById('modalInterno').style.display = 'flex'; }
-function salvaNuovoInterno() {
-    const codice = document.getElementById('codiceInternoInput').value.trim();
-    if(codice && clienteCorrenteId && cantiereCorrenteId) {
-        const cl = db.clienti.find(c => c.id === clienteCorrenteId);
-        const ca = cl?.cantieri.find(c => c.id === cantiereCorrenteId);
-        if(ca) ca.interni.push({ id: 'in_' + Date.now(), codice: codice });
-        document.getElementById('codiceInternoInput').value = '';
-        chiudiModali();
-        salvaDB();
-    }
-}
-function eliminaInterno(clId, caId, inId) {
-    const cl = db.clienti.find(c => c.id === clId);
-    const ca = cl?.cantieri.find(c => c.id === caId);
-    if(ca) ca.interni = ca.interni.filter(i => i.id !== inId);
-    salvaDB();
-}
-function apriModalMassivo(clId, caId) { clienteCorrenteId = clId; cantiereCorrenteId = caId; document.getElementById('modalMassivo').style.display = 'flex'; }
-function eseguiGeneratoreMassivo() {
-    const pref = document.getElementById('massivoPrefisso').value;
-    const da = parseInt(document.getElementById('massivoDa').value) || 1;
-    const a = parseInt(document.getElementById('massivoA').value) || 1;
-    const cl = db.clienti.find(c => c.id === clienteCorrenteId);
-    const ca = cl?.cantieri.find(c => c.id === cantiereCorrenteId);
-    if(ca) {
-        for(let i=da; i<=a; i++) {
-            ca.interni.push({ id: 'in_' + Date.now() + '_' + i, codice: `${pref} ${i}` });
-        }
-    }
-    chiudiModali();
-    salvaDB();
-}
-function chiudiModali() {
-    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-}
-
-document.getElementById('dataRapportino').valueAsDate = new Date();
-
-function selezionaTipologia(tipo) {
-    tipologiaAttuale = tipo;
-    document.querySelectorAll('#chipsTipologia .chip').forEach(c => {
-        c.classList.toggle('selected', c.innerText === tipo);
-    });
-    document.getElementById('campiLavoro').style.display = tipo === 'LAVORO' ? 'block' : 'none';
-    document.getElementById('campoSpese').style.display = tipo === 'LAVORO' ? 'block' : 'none';
-    if(tipo !== 'LAVORO') {
-        oreSelezionate = 8.0;
-        document.getElementById('inputNote').value = `Giornata di ${tipo}`;
-    } else {
-        document.getElementById('inputNote').value = '';
-    }
-    aggiornaUIlOre();
-}
-
-function renderCompilaSelects() {
-    const selCl = document.getElementById('selectCliente');
-    const valCl = selCl.value;
-    selCl.innerHTML = '<option value="">Seleziona Cliente *</option>';
-    db.clienti.forEach(cl => {
-        selCl.innerHTML += `<option value="${cl.id}">${cl.nome}</option>`;
-    });
-    if(valCl) selCl.value = valCl;
-    aggiornaCantieri();
-    renderFrequenti();
-}
-
-function aggiornaCantieri() {
-    const clId = document.getElementById('selectCliente').value;
-    const selCa = document.getElementById('selectCantiere');
-    selCa.innerHTML = '<option value="">Seleziona Cantiere *</option>';
-    const cl = db.clienti.find(c => c.id === clId);
-    if(cl) {
-        cl.cantieri.filter(c => c.stato === 'ATTIVO').forEach(ca => {
-            selCa.innerHTML += `<option value="${ca.id}">${ca.nome}</option>`;
-        });
-    }
-    aggiornaInterni();
-}
-
-function aggiornaInterni() {
-    const clId = document.getElementById('selectCliente').value;
-    const caId = document.getElementById('selectCantiere').value;
-    const selIn = document.getElementById('selectInterno');
-    selIn.innerHTML = '<option value="">Nessun Interno</option>';
-    const cl = db.clienti.find(c => c.id === clId);
-    const ca = cl?.cantieri.find(c => c.id === caId);
-    if(ca) {
-        ca.interni.forEach(inr => {
-            selIn.innerHTML += `<option value="${inr.id}">${inr.codice}</option>`;
-        });
-    }
-}
-
-function aggiungiOre(v) {
-    if(oreSelezionate + v >= 0.5) oreSelezionate += v;
-    aggiornaUIlOre();
-}
-function impostaOre(v) {
-    oreSelezionate = v;
-    aggiornaUIlOre();
-}
-function aggiornaUIlOre() {
-    document.getElementById('oreLabel').innerText = oreSelezionate + 'h';
-}
-
-function renderFrequenti() {
-    const container = document.getElementById('chipsFrequenti');
-    const box = document.getElementById('boxFrequenti');
-    container.innerHTML = '';
-    const lavoroRaps = db.rapportini.filter(r => r.tipologia === 'LAVORO').slice(-30).reverse();
-    const unici = [];
-    lavoroRaps.forEach(r => {
-        const key = `${r.clienteId}_${r.cantiereId}_${r.internoId || ''}`;
-        if(!unici.includes(key) && unici.length < 3) {
-            unici.push(key);
-            const cl = db.clienti.find(c => c.id === r.clienteId);
-            const ca = cl?.cantieri.find(c => c.id === r.cantiereId);
-            if(cl && ca) {
-                const chip = document.createElement('div');
-                chip.className = 'chip';
-                chip.innerText = `${ca.nome} ${r.internoCodice || ''}`;
-                chip.onclick = () => {
-                    document.getElementById('selectCliente').value = cl.id;
-                    aggiornaCantieri();
-                    document.getElementById('selectCantiere').value = ca.id;
-                    aggiornaInterni();
-                    if(r.internoId) document.getElementById('selectInterno').value = r.internoId;
-                };
-                container.appendChild(chip);
-            }
-        }
-    });
-    box.style.display = unici.length > 0 ? 'block' : 'none';
-}
-
-function copiaUltimoRapportino() {
-    const ultimo = db.rapportini[db.rapportini.length - 1];
-    if(!ultimo) { alert("Nessuno storico disponibile."); return; }
-    selezionaTipologia(ultimo.tipologia);
-    oreSelezionate = ultimo.ore;
-    document.getElementById('inputNote').value = ultimo.note;
-    document.getElementById('inputSpese').value = ultimo.speseAnticipate;
-    if(ultimo.tipologia === 'LAVORO') {
-        document.getElementById('selectCliente').value = ultimo.clienteId;
-        aggiornaCantieri();
-        document.getElementById('selectCantiere').value = ultimo.cantiereId || '';
-        aggiornaInterni();
-        document.getElementById('selectInterno').value = ultimo.internoId || '';
-    }
-    aggiornaUIlOre();
-    alert("Configurazione ripristinata!");
-}
-
-function registraRapportino() {
-    const dataInput = document.getElementById('dataRapportino').value;
-    if(!dataInput) { alert("Seleziona una data valida."); return; }
-    const parti = dataInput.split('-');
-    const dataFormattata = `${parti[2]}/${parti[1]}/${parti[0]}`;
-
-    let clienteId = "ASSENTE", clienteNome = "Non Specificato", cantiereId = null, cantiereNome = null, internoId = null, internoCodice = null;
-
-    if(tipologiaAttuale === 'LAVORO') {
-        clienteId = document.getElementById('selectCliente').value;
-        if(!clienteId) { alert("Seleziona un cliente."); return; }
-        const cl = db.clienti.find(c => c.id === clienteId);
-        clienteNome = cl.nome;
-
-        cantiereId = document.getElementById('selectCantiere').value;
-        if(cantiereId) {
-            const ca = cl.cantieri.find(c => c.id === cantiereId);
-            cantiereNome = ca.nome;
-        }
-
-        internoId = document.getElementById('selectInterno').value;
-        if(internoId) {
-            const clObj = db.clienti.find(c => c.id === clienteId);
-            const caObj = clObj?.cantieri.find(c => c.id === cantiereId);
-            const inObj = caObj?.interni.find(i => i.id === internoId);
-            internoCodice = inObj?.codice;
-        }
-    }
-
-    const duplicato = db.rapportini.some(r => r.data === dataFormattata && (tipologiaAttuale !== 'LAVORO' ? r.tipologia === tipologiaAttuale : (r.tipologia === 'LAVORO' && r.cantiereId === cantiereId && r.internoId === internoId)));
-    if(duplicato) {
-        if(!confirm("Hai già inserito una voce simile in questa data. Vuoi procedere comunque?")) return;
-    }
-
-    db.rapportini.push({
-        id: 'rap_' + Date.now(),
-        data: dataFormattata,
-        clienteId, clienteNome, cantiereId, cantiereNome, internoId, internoCodice,
-        tipologia: tipologiaAttuale,
-        ore: oreSelezionate,
-        note: document.getElementById('inputNote').value.replace(/;/g, ','),
-        speseAnticipate: parseFloat(document.getElementById('inputSpese').value) || 0.0
-    });
-
-    document.getElementById('inputNote').value = '';
-    document.getElementById('inputSpese').value = '0.0';
-    salvaDB();
-    alert("Rapportino Registrato!");
-}
-
-const mesiNomi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
-
-function cambiaMese(dir) {
-    meseSelezionato += dir;
-    if(meseSelezionato > 11) { meseSelezionato = 0; annoSelezionato++; }
-    else if(meseSelezionato < 0) { meseSelezionato = 11; annoSelezionato--; }
-    renderPlancia();
-}
-
-function renderCantieriFiltro() {
-    renderPlancia();
-}
-
-function renderPlancia() {
-    document.getElementById('labelMeseAnno').innerText = `${mesiNomi[meseSelezionato]} ${annoSelezionato}`;
-    
-    const selFiltroCl = document.getElementById('filtroCliente');
-    const valClF = selFiltroCl.value;
-    selFiltroCl.innerHTML = '<option value="">Tutti i Clienti</option>';
-    db.clienti.forEach(cl => {
-        selFiltroCl.innerHTML += `<option value="${cl.id}">${cl.nome}</option>`;
-    });
-    selFiltroCl.value = valClF;
-
-    const tipoFiltro = document.getElementById('filtroTipo').value;
-    const clienteFiltro = document.getElementById('filtroCliente').value;
-    const ricerca = document.getElementById('inputRicerca').value.toLowerCase();
-
-    const filtrati = db.rapportini.filter(r => {
-        const p = r.data.split('/');
-        if(p.length !== 3) return false;
-        const a = parseInt(p[2]), m = parseInt(p[1]) - 1;
-        if(a !== annoSelezionato || m !== meseSelezionato) return false;
-        if(tipoFiltro !== 'TUTTI' && r.tipologia !== tipoFiltro) return false;
-        if(clienteFiltro && r.clienteId !== clienteFiltro) return false;
-        if(ricerca && !r.clienteNome.toLowerCase().includes(ricerca) && !(r.cantiereNome||'').toLowerCase().includes(ricerca) && !(r.internoCodice||'').toLowerCase().includes(ricerca) && !r.note.toLowerCase().includes(ricerca)) return false;
-        return true;
-    }).sort((a,b) => parseInt(a.data.split('/')[0]) - parseInt(b.data.split('/')[0]));
-
-    let ord = 0, stra = 0, spese = 0;
-    filtrati.forEach(r => {
-        if(r.tipologia === 'LAVORO') {
-            ord += r.ore;
-            spese += r.speseAnticipate;
-        }
-    });
-
-    document.getElementById('totOrd').innerText = ord + 'h';
-    document.getElementById('totStra').innerText = stra + 'h';
-    document.getElementById('totSpese').innerText = '€' + spese;
-
-    let feriali = 0;
-    const oggi = new Date();
-    const maxG = new Date(annoSelezionato, meseSelezionato + 1, 0).getDate();
-    const limiteG = (annoSelezionato === oggi.getFullYear() && meseSelezionato === oggi.getMonth()) ? oggi.getDate() : maxG;
-    for(let g=1; g<=limiteG; g++) {
-        const d = new Date(annoSelezionato, meseSelezionato, g);
-        const dow = d.getDay();
-        if(dow !== 0 && dow !== 6) feriali++;
-    }
-    const oreRichieste = feriali * 8;
-    document.getElementById('allineamentoFeriali').innerText = `Allineamento Ore Feriali: ${ord}/${oreRichieste}h`;
-    document.getElementById('barraProgresso').style.width = Math.min(100, (oreRichieste>0?(ord/oreRichieste)*100:0)) + '%';
-
-    const container = document.getElementById('listaRapportiniPlancia');
-    container.innerHTML = '';
-    
-    const raggruppati = {};
-    filtrati.forEach(r => {
-        if(!raggruppati[r.data]) raggruppati[r.data] = [];
-        raggruppati[r.data].push(r);
-    });
-
-    for(const [data, lista] of Object.entries(raggruppati)) {
-        let righe = '';
-        lista.forEach(r => {
-            righe += `<div class="flex-between" style="padding: 8px 0; border-bottom: 1px solid var(--surface-variant);">
-                <div>
-                    <strong>${r.clienteNome} → ${r.cantiereNome || 'Generico'} [${r.internoCodice || '-'}]</strong><br>
-                    <span class="text-sm text-green">Ore: ${r.ore}h (${r.tipologia}) ${r.speseAnticipate>0?'| Spese: €'+r.speseAnticipate:''}</span><br>
-                    ${r.note?`<span class="text-sm">Note: ${r.note}</span>`:''}
-                </div>
-                <div>
-                    <span style="color:var(--danger); cursor:pointer; font-size:12px; padding: 6px;" onclick="eliminaRapportino('${r.id}')">Elimina</span>
-                </div>
-            </div>`;
-        });
-        container.innerHTML += `<div class="card"><strong>Giornata: ${data}</strong>${righe}</div>`;
-    }
-}
-
-function eliminaRapportino(id) {
-    if(confirm("Eliminare questo rapportino?")) {
-        db.rapportini = db.rapportini.filter(r => r.id !== id);
-        salvaDB();
-    }
-}
-
-function verificaBuchi() {
-    const oggi = new Date();
-    const maxG = new Date(annoSelezionato, meseSelezionato + 1, 0).getDate();
-    const limiteG = (annoSelezionato === oggi.getFullYear() && meseSelezionato === oggi.getMonth()) ? oggi.getDate() : maxG;
-    const mancanti = [];
-
-    for(let g=1; g<=limiteG; g++) {
-        const d = new Date(annoSelezionato, meseSelezionato, g);
-        const dow = d.getDay();
-        if(dow !== 0 && dow !== 6) {
-            const dataStr = `${String(g).padStart(2,'0')}/${String(meseSelezionato+1).padStart(2,'0')}/${annoSelezionato}`;
-            const haRap = db.rapportini.some(r => r.data === dataStr);
-            if(!haRap) mancanti.push(dataStr);
-        }
-    }
-
-    const cont = document.getElementById('contenutoBuchi');
-    if(mancanti.length === 0) {
-        cont.innerHTML = '<p class="text-green">Ottimo! Il tuo registro è completo per questo mese.</p>';
-    } else {
-        cont.innerHTML = '<p>Mancano i rapportini nei giorni:</p>' + mancanti.map(d => `<br>• ${d}`).join('');
-    }
-    document.getElementById('modalBuchi').style.display = 'flex';
-}
-
-function apriModalOperaio() {
-    document.getElementById('inputNomeOperaioModal').value = db.nomeOperaio;
-    document.getElementById('modalOperaio').style.display = 'flex';
-}
-function salvaNomeOperaio() {
-    db.nomeOperaio = document.getElementById('inputNomeOperaioModal').value || 'Operaio';
-    chiudiModali();
-    salvaDB();
-}
-
-function esportaJSON() {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
-    const dlAnchorElem = document.createElement('a');
-    dlAnchorElem.setAttribute("href", dataStr);
-    dlAnchorElem.setAttribute("download", "registro_ore_backup.json");
-    dlAnchorElem.click();
-}
-
-function importaJSON(event) {
-    const file = event.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            db = JSON.parse(e.target.result);
-            salvaDB();
-            alert("Database ripristinato con successo!");
-        } catch(err) {
-            alert("File non valido.");
-        }
-    };
-    reader.readAsText(file);
-}
-
-function esportaCSV() {
-    let csv = "DATA;CLIENTE;CANTIERE;INTERNO;ORE;TIPOLOGIA;SPESE;NOTE\n";
-    db.rapportini.forEach(r => {
-        csv += `${r.data};${r.clienteNome};${r.cantiereNome||''};${r.internoCodice||''};${r.ore};${r.tipologia};${r.speseAnticipate};${r.note}\n`;
-    });
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Registro_${mesiNomi[meseSelezionato]}_${annoSelezionato}.csv`;
-    a.click();
-}
+(() => {
+  'use strict';
+  const DB_NAME='registro-ore-pwa', STORE='state', KEY='main', TYPES=['LAVORO','MALATTIA','FERIE','PERMESSO','CONGEDO'];
+  const $=id=>document.getElementById(id);
+  const uid=prefix=>`${prefix}_${crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2)}`;
+  const freshDb=()=>({nomeOperaio:'Operaio Non Specificato',clienti:[],rapportini:[]});
+  let db=freshDb(), selectedType='LAVORO', hours=8.5, year=new Date().getFullYear(), month=new Date().getMonth(), toastTimer, dbHandle;
+  const monthNames=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+  const el=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=String(text);return node;};
+  function notify(message){const box=$('toast');box.textContent=message;box.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>box.classList.remove('show'),2600);}
+  function openDb(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,1);req.onupgradeneeded=()=>req.result.createObjectStore(STORE);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
+  async function loadDb(){
+    try{dbHandle=await openDb();const value=await new Promise((resolve,reject)=>{const tx=dbHandle.transaction(STORE,'readonly');const req=tx.objectStore(STORE).get(KEY);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});if(value){db=normalizeDb(value);return;}}
+    catch(error){console.error(error);notify('Archivio locale non disponibile. Controlla le impostazioni di Safari.');}
+    try{const old=localStorage.getItem('registro_ore_db');if(old){db=normalizeDb(JSON.parse(old));await saveDb();localStorage.removeItem('registro_ore_db');return;}}catch(error){console.error(error);}
+  }
+  async function saveDb(){
+    try{const tx=dbHandle.transaction(STORE,'readwrite');tx.objectStore(STORE).put(db,KEY);await new Promise((resolve,reject)=>{tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);});renderAll();return true;}
+    catch(error){console.error(error);notify('Salvataggio non riuscito: esporta subito un backup.');return false;}
+  }
+  function normalizeDb(value){
+    if(!value||typeof value!=='object'||!Array.isArray(value.clienti)||!Array.isArray(value.rapportini))throw Error('Formato archivio non valido');
+    return {nomeOperaio:typeof value.nomeOperaio==='string'?value.nomeOperaio:'Operaio Non Specificato',clienti:value.clienti.map(c=>({id:String(c.id||uid('cl')),nome:String(c.nome||''),cantieri:Array.isArray(c.cantieri)?c.cantieri.map(s=>({id:String(s.id||uid('ca')),nome:String(s.nome||''),stato:s.stato==='CHIUSO'?'CHIUSO':'ATTIVO',interni:Array.isArray(s.interni)?s.interni.map(r=>({id:String(r.id||uid('in')),codice:String(r.codice||'')})):[],fotoPaths:[],quadroElettrico:Array.isArray(s.quadroElettrico)?s.quadroElettrico:[],fotoData:Array.isArray(s.fotoData)?s.fotoData:[]})):[]})),rapportini:value.rapportini.map(r=>({...r,id:String(r.id||uid('rap')),data:String(r.data||''),clienteId:String(r.clienteId||'ASSENTE'),clienteNome:String(r.clienteNome||'Non Specificato'),cantiereId:r.cantiereId==null?null:String(r.cantiereId),cantiereNome:r.cantiereNome==null?null:String(r.cantiereNome),internoId:r.internoId==null?null:String(r.internoId),internoCodice:r.internoCodice==null?null:String(r.internoCodice),tipologia:TYPES.includes(r.tipologia)?r.tipologia:'LAVORO',ore:Number(r.ore)||0,note:String(r.note||''),speseAnticipate:Number(r.speseAnticipate)||0})))};
+  }
+  function validDb(value){
+    try{
+      if(!value||typeof value!=='object'||!Array.isArray(value.clienti)||!Array.isArray(value.rapportini)||value.clienti.length>10000||value.rapportini.length>100000)return false;
+      const ids=new Set();const idOk=id=>typeof id==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(id);
+      for(const c of value.clienti){if(!idOk(c.id)||ids.has(c.id)||typeof c.nome!=='string'||c.nome.length>500||!Array.isArray(c.cantieri))return false;ids.add(c.id);for(const s of c.cantieri){if(!idOk(s.id)||typeof s.nome!=='string'||s.nome.length>500||!['ATTIVO','CHIUSO'].includes(s.stato)||!Array.isArray(s.interni))return false;for(const r of s.interni){if(!idOk(r.id)||typeof r.codice!=='string'||r.codice.length>300)return false;}if(!Array.isArray(s.quadroElettrico||[]))return false;for(const part of s.quadroElettrico||[]){if(!idOk(part.id)||typeof part.tipologia!=='string'||part.tipologia.length>100||typeof part.descrizione!=='string'||part.descrizione.length>500||!Number.isInteger(part.quantita)||part.quantita<1||part.quantita>10000)return false;}if(!Array.isArray(s.fotoData||[]))return false;}}
+      for(const r of value.rapportini){const dateOk=/^(\d{2}\/\d{2}\/\d{4}|\d{4}-\d{2}-\d{2})$/.test(r.data);if(!idOk(r.id)||!dateOk||!TYPES.includes(r.tipologia)||!Number.isFinite(Number(r.ore))||Number(r.ore)<0||Number(r.ore)>24||!Number.isFinite(Number(r.speseAnticipate||0))||Number(r.speseAnticipate||0)<0||String(r.note||'').length>5000)return false;}
+      return true;
+    }catch(_){return false;}
+  }
+  const dateIso=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+  const dateDisplay=iso=>{const [y,m,d]=iso.split('-');return `${d}/${m}/${y}`;};
+  const dateParts=value=>{const parts=value.split(/[/-]/).map(Number);return value.includes('/')?parts:[parts[2],parts[1],parts[0]];};
+  function isHoliday(date){const [d,m,y]=dateParts(date);const day=new Date(y,m-1,d).getDay();if(day===0||day===6)return true;if([[1,1],[6,1],[25,4],[1,5],[2,6],[15,8],[1,11],[8,12],[25,12],[26,12]].some(([a,b])=>a===d&&b===m))return true;const easter=easterSunday(y);return (d===easter.getDate()&&m===easter.getMonth()+1)||(d===easter.getDate()+1&&m===easter.getMonth()+1)||(easter.getDate()+1>new Date(y,easter.getMonth()+1,0).getDate()&&d===1&&m===easter.getMonth()+2);}
+  function easterSunday(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,n=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*n+114)/31)-1,da=((h+l-7*n+114)%31)+1;return new Date(y,mo,da);}
+  function distribution(dayReports){let remaining=8;const festive=dayReports[0]?isHoliday(dayReports[0].data):false;return new Map(dayReports.map(r=>{if(r.tipologia!=='LAVORO')return[r.id,[r.ore,0]];if(festive)return[r.id,[0,r.ore]];if(remaining<=0)return[r.id,[0,r.ore]];const ordinary=Math.min(remaining,r.ore);remaining-=ordinary;return[r.id,[ordinary,r.ore-ordinary]];}));}
+  function distributionAll(){const map=new Map();const groups=groupBy(db.rapportini,r=>r.data);for(const rows of groups.values())for(const [id,pair]of distribution(rows))map.set(id,pair);return map;}
+  function groupBy(items,keyFn){const map=new Map();for(const item of items){const key=keyFn(item);if(!map.has(key))map.set(key,[]);map.get(key).push(item);}return map;}
+  function renderAll(){renderSelects();renderFrequent();renderCustomers();renderBoard();renderPhotos();}
+  function fillSelect(select,items,placeholder,selected=''){select.replaceChildren();const first=el('option','',placeholder);first.value='';select.append(first);for(const item of items){const opt=el('option','',item.nome);opt.value=item.id;select.append(opt);}select.value=items.some(i=>i.id===selected)?selected:'';}
+  function renderSelects(){const oldC=$('customer-select').value,oldS=$('site-select').value,oldR=$('room-select').value;fillSelect($('customer-select'),db.clienti,'Seleziona cliente *',oldC);const customer=db.clienti.find(c=>c.id===$('customer-select').value);const sites=(customer?.cantieri||[]).filter(s=>s.stato==='ATTIVO');fillSelect($('site-select'),sites,'Lavoro presso il cliente / nessun cantiere',oldS);const site=sites.find(s=>s.id===$('site-select').value);fillSelect($('room-select'),site?.interni||[],'Nessun interno',oldR);fillSelect($('filter-customer'),db.clienti,'Tutti i clienti',$('filter-customer').value);fillSelect($('photo-customer'),db.clienti,'Seleziona cliente',$('photo-customer').value);renderPhotoSites();}
+  function renderFrequent(){const root=$('frequent-sites');root.replaceChildren();const recent=db.rapportini.filter(r=>r.tipologia==='LAVORO').slice(-30).reverse();const seen=new Set();for(const r of recent){const key=`${r.clienteId}/${r.cantiereId||''}/${r.internoId||''}`;if(seen.has(key)||seen.size>=4)continue;seen.add(key);const customer=db.clienti.find(c=>c.id===r.clienteId);const site=customer?.cantieri.find(s=>s.id===r.cantiereId);if(!customer)continue;const b=el('button','chip',site?`${customer.nome} · ${site.nome}${r.internoCodice?' · '+r.internoCodice:''}`:`${customer.nome} · presso cliente`);b.onclick=()=>{$('customer-select').value=customer.id;renderSelects();$('site-select').value=site?.id||'';renderSelects();$('room-select').value=r.internoId||'';};root.append(b);}}
+  function renderCustomers(){const root=$('customer-list');root.replaceChildren();if(!db.clienti.length){root.append(el('div','empty','Ancora nessun cliente. Aggiungine uno per iniziare.'));return;}for(const c of db.clienti){const card=el('article','customer-card'),head=el('div','row-between'),name=el('strong','',c.nome),actions=el('div','row-actions');const siteBtn=el('button','mini-button','＋ Cantiere');siteBtn.onclick=()=>addSite(c.id);const del=el('button','mini-button danger','Elimina');del.onclick=()=>deleteCustomer(c.id);actions.append(siteBtn,del);head.append(name,actions);card.append(head);if(!c.cantieri.length)card.append(el('p','hint','Nessun cantiere: puoi comunque registrare lavori presso il cliente.'));for(const s of c.cantieri){const site=el('div','site-card'),top=el('div','row-between'),siteName=el('strong','',`${s.nome}${s.stato==='CHIUSO'?' · CHIUSO':''}`),buttons=el('div','row-actions');if(s.stato==='ATTIVO'){const room=el('button','mini-button','＋ Interno');room.onclick=()=>addRoom(c.id,s.id);const bulk=el('button','mini-button','Genera');bulk.onclick=()=>addRooms(c.id,s.id);const close=el('button','mini-button','Chiudi');close.onclick=()=>setSiteState(c.id,s.id,'CHIUSO');buttons.append(room,bulk,close);}else{const open=el('button','mini-button','Riapri');open.onclick=()=>setSiteState(c.id,s.id,'ATTIVO');buttons.append(open);}const panel=el('button','mini-button','Quadro');panel.onclick=()=>addPanelPart(c.id,s.id);const photo=el('button','mini-button','Foto');photo.onclick=()=>{$('photo-customer').value=c.id;renderPhotoSites();$('photo-site').value=s.id;document.querySelector('[data-screen="tools"]').click();};buttons.append(panel,photo);top.append(siteName,buttons);site.append(top);if(s.interni.length){const rooms=el('div','room-list');for(const r of s.interni){const tag=el('span','room-tag',r.codice);rooms.append(tag);}site.append(rooms);}if(s.quadroElettrico?.length){const parts=el('div','room-list');for(const part of s.quadroElettrico){const tag=el('span','room-tag',`${part.quantita}× ${part.tipologia} · ${part.descrizione}`);parts.append(tag);}site.append(parts);}card.append(site);}root.append(card);}}
+  function addCustomer(){const name=prompt('Nome cliente o azienda');if(!name?.trim())return;db.clienti.push({id:uid('cl'),nome:name.trim(),cantieri:[]});saveDb();}
+  function addSite(customerId){const name=prompt('Nome cantiere');if(!name?.trim())return;const c=db.clienti.find(x=>x.id===customerId);if(c)c.cantieri.push({id:uid('ca'),nome:name.trim(),stato:'ATTIVO',interni:[],fotoPaths:[],quadroElettrico:[],fotoData:[]});saveDb();}
+  function addRoom(customerId,siteId){const code=prompt('Codice interno / appartamento');if(!code?.trim())return;const site=findSite(customerId,siteId);if(site)site.interni.push({id:uid('in'),codice:code.trim()});saveDb();}
+  function addPanelPart(customerId,siteId){const site=findSite(customerId,siteId);if(!site)return;const tipologia=prompt('Tipologia componente (es. differenziale, SPD)');if(!tipologia?.trim())return;const descrizione=prompt('Descrizione / modello');if(!descrizione?.trim())return;const quantita=Number(prompt('Quantità','1'));if(!Number.isInteger(quantita)||quantita<1||quantita>10000){notify('Quantità non valida.');return;}site.quadroElettrico.push({id:uid('comp'),tipologia:tipologia.trim(),descrizione:descrizione.trim(),quantita});saveDb();}
+  function addRooms(customerId,siteId){const prefix=prompt('Prefisso degli interni','App.');if(prefix===null)return;const start=Number(prompt('Da numero', '1')),end=Number(prompt('A numero','45'));if(!Number.isInteger(start)||!Number.isInteger(end)||start<1||end<start||end-start+1>5000){notify('Intervallo non valido (massimo 5.000 interni).');return;}const site=findSite(customerId,siteId);if(site)for(let n=start;n<=end;n++)site.interni.push({id:uid('in'),codice:`${prefix.trim()} ${n}`.trim()});saveDb();}
+  function findSite(customerId,siteId){return db.clienti.find(c=>c.id===customerId)?.cantieri.find(s=>s.id===siteId);}
+  function setSiteState(customerId,siteId,state){const site=findSite(customerId,siteId);if(site){site.stato=state;saveDb();}}
+  function deleteCustomer(id){if(!confirm('Eliminare questo cliente e i rapportini associati? Esporta un backup prima di continuare.'))return;db.clienti=db.clienti.filter(c=>c.id!==id);db.rapportini=db.rapportini.filter(r=>r.clienteId!==id);saveDb();}
+  function setType(type){selectedType=type;document.querySelectorAll('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type===type));$('work-fields').hidden=type!=='LAVORO';$('expenses-field').hidden=type!=='LAVORO';if(type!=='LAVORO'){$('expenses').value='0';$('notes').value=`Giornata di ${type}`;hours=8;}else $('notes').value='';updateHours();}
+  function updateHours(){ $('hours-value').textContent=Number(hours).toLocaleString('it-IT',{maximumFractionDigits:1});document.querySelectorAll('[data-hours]').forEach(b=>b.classList.toggle('active',Number(b.dataset.hours)===hours)); }
+  function saveReport(){const date=$('report-date').value;if(!date){notify('Seleziona una data valida.');return;}let client=null,site=null,room=null;if(selectedType==='LAVORO'){client=db.clienti.find(c=>c.id===$('customer-select').value);if(!client){notify('Seleziona un cliente.');return;}site=client.cantieri.find(s=>s.id===$('site-select').value)||null;room=site?.interni.find(r=>r.id===$('room-select').value)||null;}const expense=Number(String($('expenses').value||0).replace(',','.'));if(!Number.isFinite(expense)||expense<0){notify('Inserisci spese valide.');return;}const dateText=dateDisplay(date);const duplicate=db.rapportini.some(r=>r.data===dateText&&(selectedType==='LAVORO'?r.tipologia==='LAVORO'&&r.cantiereId===(site?.id||null)&&r.internoId===(room?.id||null):r.tipologia===selectedType));if(duplicate&&!confirm('Hai già inserito una voce simile in questa data. Vuoi aggiungerne un’altra?'))return;db.rapportini.push({id:uid('rap'),data:dateText,clienteId:client?.id||'ASSENTE',clienteNome:client?.nome||'Non Specificato',cantiereId:site?.id||null,cantiereNome:site?.nome||null,internoId:room?.id||null,internoCodice:room?.codice||null,tipologia:selectedType,ore:hours,note:$('notes').value.trim(),speseAnticipate:selectedType==='LAVORO'?expense:0});saveDb().then(ok=>{if(ok){notify('Rapportino registrato.');$('notes').value='';$('expenses').value='0';}});}
+  function copyLast(){const r=db.rapportini.at(-1);if(!r){notify('Non ci sono rapportini precedenti.');return;}setType(r.tipologia);hours=r.ore;updateHours();$('notes').value=r.note;$('expenses').value=r.speseAnticipate||0;if(r.tipologia==='LAVORO'){$('customer-select').value=r.clienteId;renderSelects();$('site-select').value=r.cantiereId||'';renderSelects();$('room-select').value=r.internoId||'';}notify('Configurazione precedente copiata.');}
+  function renderBoard(){const title=$('screen-title');if(title)title.textContent=document.querySelector('.screen.active')?.id==='screen-board'?'Plancia':'Rapportino';$('profile-name').textContent=db.nomeOperaio;$('month-label').textContent=`${monthNames[month]} ${year}`;const ftype=$('filter-type').value,fcustomer=$('filter-customer').value,query=$('search').value.trim().toLocaleLowerCase('it');const filtered=db.rapportini.filter(r=>{const [d,m,y]=dateParts(r.data);return y===year&&m===month+1&&(ftype==='TUTTI'||r.tipologia===ftype)&&(!fcustomer||r.clienteId===fcustomer)&&(!query||[r.clienteNome,r.cantiereNome,r.internoCodice,r.note].some(x=>String(x||'').toLocaleLowerCase('it').includes(query)));});const allDist=distributionAll();let ordinary=0,overtime=0,expenses=0;for(const r of filtered){const split=allDist.get(r.id)||[r.ore,0];ordinary+=split[0];overtime+=split[1];expenses+=r.speseAnticipate||0;}const target=weekdaysElapsed(year,month)*8;$('total-ordinary').textContent=`${fmt(ordinary)} h`;$('total-overtime').textContent=`${fmt(overtime)} h`;$('total-expenses').textContent=`€ ${fmt(expenses)}`;$('progress-text').textContent=`${fmt(ordinary)} / ${target} h`;$('progress-bar').style.width=`${Math.min(100,target?ordinary/target*100:0)}%`;const root=$('report-list');root.replaceChildren();if(!filtered.length){root.append(el('div','empty','Nessun rapportino per questo mese e questi filtri.'));return;}const byDate=groupBy(filtered,r=>r.data);for(const [date,rows]of [...byDate.entries()].sort((a,b)=>dateParts(a[0])[0]-dateParts(b[0])[0])){const card=el('article','report-card');card.append(el('div','report-date',`GIORNATA · ${date}`));for(const r of rows){const line=el('div','report-line'),left=el('div',''),title=el('strong','',`${r.clienteNome} · ${r.cantiereNome||'Presso cliente'}${r.internoCodice?' · '+r.internoCodice:''}`),meta=el('div','report-meta',r.tipologia==='LAVORO'?`${fmt(r.ore)} h totali · ${fmt((allDist.get(r.id)||[r.ore,0])[0])} ord. + ${fmt((allDist.get(r.id)||[r.ore,0])[1])} str. · Spese €${fmt(r.speseAnticipate||0)}`:`${r.tipologia} · ${fmt(r.ore)} h`);left.append(title,meta);if(r.note)left.append(el('div','report-meta',r.note));const actions=el('div','row-actions'),edit=el('button','mini-button','Modifica'),del=el('button','mini-button danger','Elimina');edit.onclick=()=>editReport(r.id);del.onclick=()=>deleteReport(r.id);actions.append(edit,del);line.append(left,actions);card.append(line);}root.append(card);}}
+  function fmt(n){return Number(n||0).toLocaleString('it-IT',{maximumFractionDigits:2});}
+  function weekdaysElapsed(y,m){const now=new Date(),end=new Date(y,m+1,0).getDate(),limit=y===now.getFullYear()&&m===now.getMonth()?now.getDate():new Date(y,m,1)>now?0:end;let count=0;for(let day=1;day<=limit;day++){const d=new Date(y,m,day);const iso=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;if(d.getDay()!==0&&d.getDay()!==6&&!isHoliday(iso))count++;}return count;}
+  function deleteReport(id){if(!confirm('Eliminare questo rapportino?'))return;db.rapportini=db.rapportini.filter(r=>r.id!==id);saveDb();}
+  function editReport(id){const r=db.rapportini.find(x=>x.id===id);if(!r)return;const h=prompt('Ore totali',String(r.ore));if(h===null)return;const hoursValue=Number(String(h).replace(',','.'));if(!Number.isFinite(hoursValue)||hoursValue<0||hoursValue>24){notify('Valore ore non valido.');return;}const notes=prompt('Note',r.note);if(notes===null)return;let exp=r.speseAnticipate||0;if(r.tipologia==='LAVORO'){const e=prompt('Spese anticipate (€)',String(exp));if(e===null)return;exp=Number(String(e).replace(',','.'));if(!Number.isFinite(exp)||exp<0){notify('Importo spese non valido.');return;}}Object.assign(r,{ore:hoursValue,note:notes,speseAnticipate:exp});saveDb();}
+  function monthChange(delta){month+=delta;if(month<0){month=11;year--;}if(month>11){month=0;year++;}renderBoard();}
+  function checkGaps(){const limit=year===new Date().getFullYear()&&month===new Date().getMonth()?new Date().getDate():new Date(year,month+1,0).getDate();const reported=new Set(db.rapportini.map(r=>{const [d,m,y]=dateParts(r.data);return `${y}-${m}-${d}`;}));const missing=[];for(let day=1;day<=limit;day++){const date=new Date(year,month,day),iso=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;if(date.getDay()!==0&&date.getDay()!==6&&!isHoliday(iso)&&!reported.has(`${year}-${month+1}-${day}`))missing.push(`${String(day).padStart(2,'0')}/${String(month+1).padStart(2,'0')}/${year}`);}alert(missing.length?`Rapportini mancanti:\n\n${missing.join('\n')}`:'Nessun giorno feriale mancante nel periodo.');}
+  function csvCell(value){let text=String(value??'');if(/^[\s\uFEFF]*[=+\-@]/.test(text))text="'"+text;return `"${text.replaceAll('"','""')}"`;}
+  function download(name,data,type){const blob=new Blob([data],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+  function exportCsv(){const allDist=distributionAll(),filtered=db.rapportini.filter(r=>{const [d,m,y]=dateParts(r.data);return y===year&&m===month+1;});const head=['DATA','CLIENTE','CANTIERE','INTERNO','ORE TOTALI','ORE ORDINARIE','ORE STRAORDINARIE','SPESE','TIPOLOGIA','NOTE'];const rows=[head.map(csvCell).join(';')];for(const r of filtered){const pair=allDist.get(r.id)||[r.ore,0];rows.push([r.data,r.clienteNome,r.cantiereNome||'',r.internoCodice||'',r.ore,pair[0],pair[1],r.speseAnticipate||0,r.tipologia,r.note].map(csvCell).join(';'));}download(`Registro_${monthNames[month]}_${year}.csv`,'\uFEFF'+rows.join('\r\n'),'text/csv;charset=utf-8');}
+  function exportBackup(){try{const shared={...db,clienti:db.clienti.map(c=>({...c,cantieri:c.cantieri.map(s=>({...s,fotoPaths:[],fotoData:[]}))}))};download('registro_ore_backup.json',JSON.stringify(shared,null,2),'application/json');notify('Backup dei dati pronto da condividere con Android. Le foto restano su questo dispositivo.');}catch(error){console.error(error);notify('Esportazione backup non riuscita.');}}
+  async function importBackup(file){if(!file)return;if(file.size>20*1024*1024){notify('Backup troppo grande (massimo 20 MB).');return;}try{const parsed=JSON.parse(await file.text());if(!validDb(parsed)){notify('Backup non valido: dati attuali conservati.');return;}const candidate=normalizeDb(parsed);if(!confirm(`Sostituire i dati attuali con ${candidate.clienti.length} clienti e ${candidate.rapportini.length} rapportini?`))return;const previous=db;db=candidate;const ok=await saveDb();if(!ok){db=previous;renderAll();return;}notify('Backup ripristinato.');}catch(error){console.error(error);notify('File non valido: dati attuali conservati.');}finally{$('backup-file').value='';}}
+  function calcDrop(){const rho=Number($('material').value),v=Number($('voltage').value),i=Number($('current').value),l=Number($('length').value),s=Number($('section').value),cos=.9;if(v<=0||s<=0||i<0||l<0){$('drop-result').textContent='Controlla i valori inseriti.';return;}const dv=(( $('phase').value==='three'?Math.sqrt(3):2)*rho*l*i*cos)/s;$('drop-result').textContent=`Caduta: ${fmt(dv)} V · ${fmt(dv/v*100)}% (cosφ 0,9)`;}
+  function renderPhotoSites(){const c=db.clienti.find(x=>x.id===$('photo-customer').value);fillSelect($('photo-site'),(c?.cantieri||[]).filter(s=>s.stato==='ATTIVO'),'Seleziona cantiere',$('photo-site').value);}
+  function renderPhotos(){const root=$('photo-gallery');if(!root)return;root.replaceChildren();const site=findSite($('photo-customer').value,$('photo-site').value);if(!site)return;for(const [index,src]of (site.fotoData||[]).entries()){const item=el('div','photo-item'),img=document.createElement('img');img.src=src;img.alt=`Foto ${index+1} ${site.nome}`;const remove=el('button','','×');remove.setAttribute('aria-label','Elimina foto');remove.onclick=()=>{if(confirm('Eliminare la foto?')){site.fotoData.splice(index,1);saveDb();}};item.append(img,remove);root.append(item);}}
+  async function addPhotos(files){const site=findSite($('photo-customer').value,$('photo-site').value);if(!site){notify('Seleziona cliente e cantiere.');return;}for(const file of files){if(!file.type.startsWith('image/'))continue;if((site.fotoData||[]).length>=20){notify('Massimo 20 foto per cantiere.');break;}try{const data=await compressImage(file);if(data.length>700000){notify('Foto troppo grande anche dopo la compressione.');continue;}site.fotoData.push(data);}catch(error){console.error(error);notify('Una foto non è stata caricata.');}}await saveDb();renderPhotos();}
+  function compressImage(file){return new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{const scale=Math.min(1,1280/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);canvas.toBlob(blob=>{if(!blob){reject(Error('Compressione non riuscita'));return;}const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(blob);},'image/jpeg',.68);};img.onerror=()=>{URL.revokeObjectURL(url);reject(Error('Immagine non leggibile'));};img.src=url;});}
+  function renderPhotoSitesAndGallery(){renderPhotoSites();renderPhotos();}
+  function renderBoardOnScreen(){renderBoard();}
+  function nav(screen){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===`screen-${screen}`));document.querySelectorAll('.nav-button').forEach(b=>b.classList.toggle('active',b.dataset.screen===screen));$('screen-title').textContent=({entry:'Rapportino',register:'Struttura',board:'Plancia',tools:'Utility'})[screen]||'Registro Ore';if(screen==='board')renderBoard();if(screen==='tools')renderPhotoSitesAndGallery();window.scrollTo(0,0);}
+  function bind(){
+    $('report-date').value=dateIso();$('type-options').replaceChildren(...TYPES.map(type=>{const b=el('button','chip',type);b.dataset.type=type;b.onclick=()=>setType(type);return b;}));
+    setType('LAVORO');
+    document.querySelectorAll('.nav-button').forEach(b=>b.addEventListener('click',()=>nav(b.dataset.screen)));
+    $('profile-button').onclick=()=>{const name=prompt('Nome operaio / intestazione report',db.nomeOperaio);if(name!==null){db.nomeOperaio=name.trim()||'Operaio';saveDb();}};$('profile-name').onclick=$('profile-button').onclick;
+    $('add-customer').onclick=addCustomer;$('customer-select').onchange=renderSelects;$('site-select').onchange=renderSelects;$('photo-customer').onchange=renderPhotoSites;$('photo-site').onchange=renderPhotos;
+    $('copy-last').onclick=copyLast;$('save-report').onclick=saveReport;$('hours-minus').onclick=()=>{hours=Math.max(.5,hours-.5);updateHours();};$('hours-plus').onclick=()=>{hours=Math.min(24,hours+.5);updateHours();};document.querySelectorAll('[data-hours]').forEach(b=>b.onclick=()=>{hours=Number(b.dataset.hours);updateHours();});
+    $('month-prev').onclick=()=>monthChange(-1);$('month-next').onclick=()=>monthChange(1);['filter-type','filter-customer'].forEach(id=>$(id).onchange=renderBoard);$('search').oninput=renderBoard;$('check-gaps').onclick=checkGaps;$('export-csv').onclick=exportCsv;$('print-report').onclick=()=>window.print();$('export-backup').onclick=exportBackup;$('import-backup').onclick=()=>$('backup-file').click();$('backup-file').onchange=e=>importBackup(e.target.files?.[0]);
+    $('calc-drop').onclick=calcDrop;$('calc-capacitor').onclick=()=>{const p=Number($('motor-power').value);$('capacitor-result').textContent=p>0?`Condensatore indicativo: ${fmt(p*50)} µF (stima per motore 230 V / 50 Hz).`:'Inserisci una potenza valida.';};$('photo-input').onchange=e=>addPhotos([...e.target.files||[]]);
+  }
+  async function start(){bind();await loadDb();renderAll();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(error=>console.warn('Service worker non disponibile',error));}
+  start();
+})();

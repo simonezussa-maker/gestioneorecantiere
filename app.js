@@ -12,7 +12,7 @@
   async function loadDb(){
     try{dbHandle=await openDb();const value=await new Promise((resolve,reject)=>{const tx=dbHandle.transaction(STORE,'readonly');const req=tx.objectStore(STORE).get(KEY);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});if(value){db=normalizeDb(value);return;}}
     catch(error){console.error(error);notify('Archivio locale non disponibile. Controlla le impostazioni di Safari.');}
-    try{const old=localStorage.getItem('registro_ore_db');if(old){db=normalizeDb(JSON.parse(old));await saveDb();localStorage.removeItem('registro_ore_db');return;}}catch(error){console.error(error);}
+    try{const old=localStorage.getItem('registro_ore_db');if(old){const migrated=normalizeDb(JSON.parse(old));db=migrated;const saved=await saveDb();if(saved)localStorage.removeItem('registro_ore_db');return;}}catch(error){console.error(error);}
   }
   async function saveDb(){
     try{const tx=dbHandle.transaction(STORE,'readwrite');tx.objectStore(STORE).put(db,KEY);await new Promise((resolve,reject)=>{tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);});renderAll();return true;}
@@ -55,10 +55,33 @@
   function validDb(value){
     try{
       if(!value||typeof value!=='object'||!Array.isArray(value.clienti)||!Array.isArray(value.rapportini)||value.clienti.length>10000||value.rapportini.length>100000)return false;
-      const ids=new Set();const idOk=id=>typeof id==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(id);
-      for(const c of value.clienti){if(!idOk(c.id)||ids.has(c.id)||typeof c.nome!=='string'||c.nome.length>500||!Array.isArray(c.cantieri))return false;ids.add(c.id);for(const s of c.cantieri){if(!idOk(s.id)||typeof s.nome!=='string'||s.nome.length>500||!['ATTIVO','CHIUSO'].includes(s.stato)||!Array.isArray(s.interni))return false;for(const r of s.interni){if(!idOk(r.id)||typeof r.codice!=='string'||r.codice.length>300)return false;}if(!Array.isArray(s.quadroElettrico||[]))return false;for(const part of s.quadroElettrico||[]){if(!idOk(part.id)||typeof part.tipologia!=='string'||part.tipologia.length>100||typeof part.descrizione!=='string'||part.descrizione.length>500||!Number.isInteger(part.quantita)||part.quantita<1||part.quantita>10000)return false;}if(!Array.isArray(s.fotoData||[]))return false;}}
-      for(const r of value.rapportini){const dateOk=/^(\d{2}\/\d{2}\/\d{4}|\d{4}-\d{2}-\d{2})$/.test(r.data);if(!idOk(r.id)||!dateOk||!TYPES.includes(r.tipologia)||!Number.isFinite(Number(r.ore))||Number(r.ore)<0||Number(r.ore)>24||!Number.isFinite(Number(r.speseAnticipate||0))||Number(r.speseAnticipate||0)<0||String(r.note||'').length>5000)return false;}
-      return true;
+      const idOk=id=>typeof id==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(id);
+      const uniqueIds=items=>items.every(x=>idOk(x))&&new Set(items).size===items.length;
+      const clientiIds=value.clienti.map(c=>c.id);
+      const cantieri=value.clienti.flatMap(c=>Array.isArray(c.cantieri)?c.cantieri:[]);
+      const interni=cantieri.flatMap(c=>Array.isArray(c.interni)?c.interni:[]);
+      const componenti=cantieri.flatMap(c=>Array.isArray(c.quadroElettrico)?c.quadroElettrico:[]);
+      const rapportiniIds=value.rapportini.map(r=>r.id);
+      const dateOk=value=>{
+        if(typeof value!=='string')return false;
+        let m,d,y,match;
+        if((match=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value))){d=+match[1];m=+match[2];y=+match[3];}
+        else if((match=/^(\d{4})-(\d{2})-(\d{2})$/.exec(value))){y=+match[1];m=+match[2];d=+match[3];}
+        else return false;
+        const dt=new Date(Date.UTC(y,m-1,d));
+        return y>=1&&dt.getUTCFullYear()===y&&dt.getUTCMonth()===m-1&&dt.getUTCDate()===d;
+      };
+      if(!uniqueIds(clientiIds)||!uniqueIds(cantieri.map(x=>x.id))||!uniqueIds(interni.map(x=>x.id))||!uniqueIds(componenti.map(x=>x.id))||!uniqueIds(rapportiniIds))return false;
+      if(value.nomeOperaio!==undefined&&(typeof value.nomeOperaio!=='string'||value.nomeOperaio.length>300))return false;
+      for(const c of value.clienti){
+        if(typeof c.nome!=='string'||c.nome.length>500||(c.cantieri!==undefined&&!Array.isArray(c.cantieri)))return false;
+        for(const s of c.cantieri||[]){
+          if(typeof s.nome!=='string'||s.nome.length>500||(s.stato!==undefined&&!['ATTIVO','CHIUSO'].includes(s.stato))||(s.interni!==undefined&&!Array.isArray(s.interni))||(s.quadroElettrico!==undefined&&!Array.isArray(s.quadroElettrico))||(s.fotoData!==undefined&&!Array.isArray(s.fotoData)))return false;
+          for(const r of s.interni||[])if(typeof r.codice!=='string'||r.codice.length>300)return false;
+          for(const part of s.quadroElettrico||[])if(typeof part.tipologia!=='string'||part.tipologia.length>100||typeof part.descrizione!=='string'||part.descrizione.length>500||!Number.isInteger(part.quantita)||part.quantita<1||part.quantita>10000)return false;
+        }
+      }
+      return value.rapportini.every(r=>idOk(r.clienteId)&&(r.cantiereId==null||idOk(r.cantiereId))&&(r.internoId==null||idOk(r.internoId))&&dateOk(r.data)&&TYPES.includes(r.tipologia)&&Number.isFinite(r.ore)&&r.ore>=0&&r.ore<=24&&Number.isFinite(r.speseAnticipate??0)&&(r.speseAnticipate??0)>=0&&String(r.note??'').length<=5000&&typeof r.clienteNome==='string'&&r.clienteNome.length<=500);
     }catch(_){return false;}
   }
   const dateIso=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
@@ -81,7 +104,7 @@
   function addRooms(customerId,siteId){const prefix=prompt('Prefisso degli interni','App.');if(prefix===null)return;const start=Number(prompt('Da numero', '1')),end=Number(prompt('A numero','45'));if(!Number.isInteger(start)||!Number.isInteger(end)||start<1||end<start||end-start+1>5000){notify('Intervallo non valido (massimo 5.000 interni).');return;}const site=findSite(customerId,siteId);if(site)for(let n=start;n<=end;n++)site.interni.push({id:uid('in'),codice:`${prefix.trim()} ${n}`.trim()});saveDb();}
   function findSite(customerId,siteId){return db.clienti.find(c=>c.id===customerId)?.cantieri.find(s=>s.id===siteId);}
   function setSiteState(customerId,siteId,state){const site=findSite(customerId,siteId);if(site){site.stato=state;saveDb();}}
-  function deleteCustomer(id){if(!confirm('Eliminare questo cliente e i rapportini associati? Esporta un backup prima di continuare.'))return;db.clienti=db.clienti.filter(c=>c.id!==id);db.rapportini=db.rapportini.filter(r=>r.clienteId!==id);saveDb();}
+  function deleteCustomer(id){if(!confirm('Eliminare questo cliente e i relativi cantieri e interni dall’elenco? I rapportini già registrati resteranno nello storico. Esporta comunque un backup prima di continuare.'))return;db.clienti=db.clienti.filter(c=>c.id!==id);saveDb();}
   function setType(type){selectedType=type;document.querySelectorAll('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type===type));$('work-fields').hidden=type!=='LAVORO';$('expenses-field').hidden=type!=='LAVORO';if(type!=='LAVORO'){$('expenses').value='0';$('notes').value=`Giornata di ${type}`;hours=8;}else $('notes').value='';updateHours();}
   function updateHours(){ $('hours-value').textContent=Number(hours).toLocaleString('it-IT',{maximumFractionDigits:1});document.querySelectorAll('[data-hours]').forEach(b=>b.classList.toggle('active',Number(b.dataset.hours)===hours)); }
   function saveReport(){const date=$('report-date').value;if(!date){notify('Seleziona una data valida.');return;}let client=null,site=null,room=null;if(selectedType==='LAVORO'){client=db.clienti.find(c=>c.id===$('customer-select').value);if(!client){notify('Seleziona un cliente.');return;}site=client.cantieri.find(s=>s.id===$('site-select').value)||null;room=site?.interni.find(r=>r.id===$('room-select').value)||null;}const expense=Number(String($('expenses').value||0).replace(',','.'));if(!Number.isFinite(expense)||expense<0){notify('Inserisci spese valide.');return;}const dateText=dateDisplay(date);const duplicate=db.rapportini.some(r=>r.data===dateText&&(selectedType==='LAVORO'?r.tipologia==='LAVORO'&&r.cantiereId===(site?.id||null)&&r.internoId===(room?.id||null):r.tipologia===selectedType));if(duplicate&&!confirm('Hai già inserito una voce simile in questa data. Vuoi aggiungerne un’altra?'))return;db.rapportini.push({id:uid('rap'),data:dateText,clienteId:client?.id||'ASSENTE',clienteNome:client?.nome||'Non Specificato',cantiereId:site?.id||null,cantiereNome:site?.nome||null,internoId:room?.id||null,internoCodice:room?.codice||null,tipologia:selectedType,ore:hours,note:$('notes').value.trim(),speseAnticipate:selectedType==='LAVORO'?expense:0});saveDb().then(ok=>{if(ok){notify('Rapportino registrato.');$('notes').value='';$('expenses').value='0';}});}
@@ -97,7 +120,7 @@
   function download(name,data,type){const blob=new Blob([data],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   function exportCsv(){const allDist=distributionAll(),filtered=db.rapportini.filter(r=>{const [d,m,y]=dateParts(r.data);return y===year&&m===month+1;});const head=['DATA','CLIENTE','CANTIERE','INTERNO','ORE TOTALI','ORE ORDINARIE','ORE STRAORDINARIE','SPESE','TIPOLOGIA','NOTE'];const rows=[head.map(csvCell).join(';')];for(const r of filtered){const pair=allDist.get(r.id)||[r.ore,0];rows.push([r.data,r.clienteNome,r.cantiereNome||'',r.internoCodice||'',r.ore,pair[0],pair[1],r.speseAnticipate||0,r.tipologia,r.note].map(csvCell).join(';'));}download(`Registro_${monthNames[month]}_${year}.csv`,'\uFEFF'+rows.join('\r\n'),'text/csv;charset=utf-8');}
   function exportBackup(){try{const shared={...db,clienti:db.clienti.map(c=>({...c,cantieri:c.cantieri.map(s=>({...s,fotoPaths:[],fotoData:[]}))}))};download('registro_ore_backup.json',JSON.stringify(shared,null,2),'application/json');notify('Backup dei dati pronto da condividere con Android. Le foto restano su questo dispositivo.');}catch(error){console.error(error);notify('Esportazione backup non riuscita.');}}
-  async function importBackup(file){if(!file)return;if(file.size>20*1024*1024){notify('Backup troppo grande (massimo 20 MB).');return;}try{const parsed=JSON.parse(await file.text());if(!validDb(parsed)){notify('Backup non valido: dati attuali conservati.');return;}const candidate=normalizeDb(parsed);if(!confirm(`Sostituire i dati attuali con ${candidate.clienti.length} clienti e ${candidate.rapportini.length} rapportini?`))return;const previous=db;db=candidate;const ok=await saveDb();if(!ok){db=previous;renderAll();return;}notify('Backup ripristinato.');}catch(error){console.error(error);notify('File non valido: dati attuali conservati.');}finally{$('backup-file').value='';}}
+  async function importBackup(file){if(!file)return;if(file.size>20*1024*1024){notify('Backup troppo grande (massimo 20 MB).');return;}try{const parsed=JSON.parse(await file.text());if(!parsed||typeof parsed!=='object'||!Array.isArray(parsed.clienti)||!Array.isArray(parsed.rapportini)){notify('Backup non valido: dati attuali conservati.');return;}const candidate=normalizeDb(parsed);if(!validDb(candidate)){notify('Backup non valido: dati attuali conservati.');return;}if(!confirm(`Sostituire i dati attuali con ${candidate.clienti.length} clienti e ${candidate.rapportini.length} rapportini?`))return;const previous=db;db=candidate;const ok=await saveDb();if(!ok){db=previous;renderAll();return;}notify('Backup ripristinato.');}catch(error){console.error(error);notify('File non valido: dati attuali conservati.');}finally{$('backup-file').value='';}}
   function calcDrop(){const rho=Number($('material').value),v=Number($('voltage').value),i=Number($('current').value),l=Number($('length').value),s=Number($('section').value),cos=.9;if(v<=0||s<=0||i<0||l<0){$('drop-result').textContent='Controlla i valori inseriti.';return;}const dv=(( $('phase').value==='three'?Math.sqrt(3):2)*rho*l*i*cos)/s;$('drop-result').textContent=`Caduta: ${fmt(dv)} V · ${fmt(dv/v*100)}% (cosφ 0,9)`;}
   function renderPhotoSites(){const c=db.clienti.find(x=>x.id===$('photo-customer').value);fillSelect($('photo-site'),(c?.cantieri||[]).filter(s=>s.stato==='ATTIVO'),'Seleziona cantiere',$('photo-site').value);}
   function renderPhotos(){const root=$('photo-gallery');if(!root)return;root.replaceChildren();const site=findSite($('photo-customer').value,$('photo-site').value);if(!site)return;for(const [index,src]of (site.fotoData||[]).entries()){const item=el('div','photo-item'),img=document.createElement('img');img.src=src;img.alt=`Foto ${index+1} ${site.nome}`;const remove=el('button','','×');remove.setAttribute('aria-label','Elimina foto');remove.onclick=()=>{if(confirm('Eliminare la foto?')){site.fotoData.splice(index,1);saveDb();}};item.append(img,remove);root.append(item);}}

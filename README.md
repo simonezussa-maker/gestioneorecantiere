@@ -1,6 +1,10 @@
-# Registro Ore Cantieri — PWA per iPhone
+# Registro Ore Cantieri — PWA di prova
 
-Questa cartella contiene una PWA installabile da Safari. Non è necessario compilare un’app iOS.
+Questa è una copia di prova locale basata sui sorgenti PWA più recenti disponibili. Le modifiche restano in questa cartella e non vengono pubblicate sul sito GitHub Pages.
+
+## Avvio per le prove
+
+Estrai lo ZIP e fai doppio clic su `Avvia_test_PWA.bat`. Si apre il browser su un indirizzo locale (`127.0.0.1:8766`); la finestra di PowerShell resta aperta finché il server di prova è attivo. Chiudila per fermarlo. La porta dedicata separa questo archivio di prova dai dati del sito e dalla vecchia PWA locale. Non carica né pubblica file online.
 
 ## Installazione su iPhone
 
@@ -19,7 +23,7 @@ L’app salva i rapportini localmente sul dispositivo. Per passare i dati fra An
 2. Nell’app di arrivo scegli **Ripristina** e seleziona quel JSON.
 3. Il ripristino sostituisce l’archivio corrente: prima esporta un backup di sicurezza.
 
-Il JSON usa i campi comuni del progetto Android (`nomeOperaio`, `clienti`, `cantieri`, `interni`, `quadroElettrico`, `rapportini`). Le foto non vengono incluse nel backup condiviso: restano nei dati del browser PWA o nell’area privata dell’app Android, perché i due sistemi memorizzano le immagini in modo diverso. Lo scambio non è automatico: va ripetuto esportando e importando il backup.
+Il JSON portatile versionato usa i campi comuni del progetto Android (`nomeOperaio`, `clienti`, `cantieri`, `interni`, `quadroElettrico`, `rapportini`) e aggiunge le foto JPEG compresse associate all'ID del cantiere. I percorsi privati del telefono non vengono esportati. La PWA importa anche i vecchi JSON senza foto e i precedenti backup PWA con foto JPEG. Il ripristino sostituisce l'archivio corrente: prima esporta un backup di sicurezza.
 
 ## Funzioni
 
@@ -29,6 +33,10 @@ Il JSON usa i campi comuni del progetto Android (`nomeOperaio`, `clienti`, `cant
 - Turno predefinito di 8,5 ore: 8 ordinarie e 0,5 straordinarie.
 - Plancia mensile, filtri, ricerca, controllo giornate, CSV e stampa/PDF.
 - Backup JSON compatibile con l’app Android.
-- Caduta di tensione, stima condensatore e foto compresse in galleria interna.
+- Quadro elettrico senza marche, con le stesse famiglie dell'app Android: protezioni, orologi, trasformatori, alimentatori, dispositivi di misura, barre e morsettiere; poli, moduli (fino a 24) e lato neutro selezionabili.
+- Calcolatore elettrico, superficie/volume, verifica preliminare cavo e protezione, motore, conversioni e piedinature comuni.
+- Foto compresse in galleria e incluse nel backup JSON.
+
+La PWA locale usa la stessa icona lampadina dell'app Android. Per le prove usa un archivio browser separato dalla versione pubblicata.
 
 I dati restano nel browser del dispositivo. Esporta regolarmente un backup, soprattutto prima di cancellare i dati di Safari o cambiare telefono.

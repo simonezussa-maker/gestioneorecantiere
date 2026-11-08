@@ -3,24 +3,24 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#101923">
+  <meta name="theme-color" content="#1976d2">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Registro Ore">
   <title>Registro Ore Cantieri</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="app.css?v=2">
 </head>
 <body>
   <header class="topbar">
-    <div><div class="eyebrow">REGISTRO PERSONALE</div><h1 id="screen-title">Rapportino</h1></div>
+      <div><div class="eyebrow">REGISTRO PERSONALE</div><h1 id="screen-title">Compila</h1></div>
     <button class="profile-button" id="profile-button" aria-label="Modifica profilo">👤</button>
   </header>
   <main id="app-main">
     <section class="screen active" id="screen-entry">
-      <div class="section-heading"><div><div class="eyebrow">NUOVA GIORNATA</div><h2>Rapportino</h2></div><input id="report-date" type="date" aria-label="Data del rapportino"></div>
+      <div class="section-heading"><div><div class="eyebrow">NUOVA GIORNATA</div><h2>Compila rapportino</h2></div><input id="report-date" type="date" aria-label="Data del rapportino"></div>
       <div id="frequent-sites" class="chips"></div>
       <button class="button secondary wide" id="copy-last">↶ &nbsp;Copia configurazione precedente</button>
       <label class="field-label">Tipologia giornata</label><div id="type-options" class="chips type-chips"></div>
@@ -40,8 +40,8 @@
     </section>
 
     <section class="screen" id="screen-register">
-      <div class="section-heading"><div><div class="eyebrow">CLIENTI E CANTIERI</div><h2>La tua struttura</h2></div><button class="button primary compact" id="add-customer">＋ Cliente</button></div>
-      <div class="action-row"><button class="button secondary" id="export-backup">Esporta backup</button><button class="button secondary" id="import-backup">Ripristina</button><input id="backup-file" type="file" accept="application/json,.json" hidden></div>
+      <div class="section-heading"><div><div class="eyebrow">CLIENTI E CANTIERI</div><h2>Anagrafica</h2></div><button class="button primary compact" id="add-customer">＋ Cliente</button></div>
+      <div class="action-row"><button class="button secondary" id="export-backup">Esporta backup + foto</button><button class="button secondary" id="import-backup">Ripristina</button><input id="backup-file" type="file" accept="application/json,.json" hidden></div>
       <div id="customer-list" class="stack"></div>
     </section>
 
@@ -58,16 +58,34 @@
     </section>
 
     <section class="screen" id="screen-tools">
-      <div class="eyebrow">STRUMENTI</div><h2>Utility e foto</h2>
-      <article class="card"><h3>Caduta di tensione</h3><div class="form-grid"><label>Impianto<select id="phase"><option value="single">Monofase</option><option value="three">Trifase</option></select></label><label>Materiale<select id="material"><option value="0.0175">Rame</option><option value="0.028">Alluminio</option></select></label><label>Tensione (V)<input id="voltage" type="number" value="230"></label><label>Corrente (A)<input id="current" type="number" value="16"></label><label>Lunghezza (m)<input id="length" type="number" value="20"></label><label>Sezione (mm²)<input id="section" type="number" value="2.5"></label></div><button class="button primary wide" id="calc-drop">Calcola caduta</button><p id="drop-result" class="result"></p></article>
-      <article class="card"><h3>Condensatore motore</h3><label>Potenza motore (kW)<input id="motor-power" type="number" min="0" step="0.1" value="1"></label><button class="button primary wide" id="calc-capacitor">Calcola</button><p id="capacitor-result" class="result"></p></article>
-      <article class="card"><h3>Foto cantiere</h3><p class="hint">Le foto vengono ridimensionate e compresse prima del salvataggio sul dispositivo.</p><label>Cliente<select id="photo-customer"></select></label><label>Cantiere<select id="photo-site"></select></label><label class="button secondary wide file-button">Scatta o scegli foto<input id="photo-input" type="file" accept="image/*" capture="environment" multiple></label><div id="photo-gallery" class="photo-grid"></div></article>
+      <div class="eyebrow">STRUMENTI</div><h2>Utility elettriche</h2>
+      <nav class="utility-tabs" aria-label="Sezioni utility">
+        <button class="utility-tab active" data-utility-tab="panel">Quadri</button><button class="utility-tab" data-utility-tab="calculations">Calcoli</button><button class="utility-tab" data-utility-tab="motor">Motore</button><button class="utility-tab" data-utility-tab="conversions">Conversioni</button><button class="utility-tab" data-utility-tab="pinouts">Piedinature</button>
+      </nav>
+      <div class="utility-panel active" id="utility-panel">
+        <article class="card"><h3>Progetta un quadro</h3><p class="hint">Catalogo generico senza marche. Poli, moduli, lato del neutro e quantità si possono adattare per ogni elemento.</p><div class="form-grid"><label>Cliente<select id="panel-customer"></select></label><label>Cantiere<select id="panel-site"></select></label></div><div id="panel-builder" class="panel-builder"><label>Dispositivo<select id="device-type"><optgroup label="Protezione"><option value="magnetotermico">Magnetotermico</option><option value="differenziale">Differenziale</option><option value="magnetotermico-differenziale">Magnetotermico differenziale</option><option value="sezionatore">Sezionatore</option><option value="scaricatore-spd">Scaricatore SPD</option><option value="portafusibile">Portafusibile</option><option value="protezione-motore">Protezione motore</option></optgroup><optgroup label="Comando"><option value="contattore">Contattore</option><option value="rele">Relè</option><option value="orologio">Orologio temporizzatore</option><option value="orologio-astronomico">Orologio astronomico</option><option value="rele-passo-passo">Relè passo-passo</option></optgroup><optgroup label="Alimentazione"><option value="trasformatore">Trasformatore</option><option value="alimentatore">Alimentatore AC/DC</option></optgroup><optgroup label="Misura"><option value="contatore-energia">Contatore energia</option></optgroup><optgroup label="Distribuzione"><option value="barra-pettine">Barra pettine / cablaggio</option><option value="barra-neutro">Barra neutro</option><option value="barra-terra">Barra terra</option><option value="morsettiera">Morsettiera</option><option value="morsettiera-distribuzione">Morsettiera di distribuzione</option><option value="blocco-distribuzione">Blocco di distribuzione</option></optgroup><option value="altro">Componente personalizzato</option></select></label><label>Sigla / descrizione<input id="device-label" type="text" maxlength="80" placeholder="es. C16 · 30 mA"></label><div class="form-grid"><label>Poli (1–8)<input id="device-poles" type="number" min="1" max="8" value="1"></label><label>Moduli DIN (1–24)<input id="device-modules" type="number" min="1" max="24" value="1"></label><label>Lato neutro<select id="device-neutral"><option value="na">Nessuno</option><option value="left">Sinistra</option><option value="right">Destra</option></select></label><label>Quantità<input id="device-quantity" type="number" min="1" max="100" value="1"></label></div><button class="button primary wide" id="add-device">Aggiungi al quadro</button></div><div id="panel-board" class="panel-board"></div></article>
+      </div>
+      <div class="utility-panel" id="utility-calculations">
+        <article class="card"><h3>Calcolatore elettrico</h3><div class="chip-row"><button class="chip active" id="calc-single">Monofase</button><button class="chip" id="calc-three">Trifase</button></div><label>Tipo di calcolo<select id="general-kind"><option value="current">Corrente da potenza</option><option value="max-length">Lunghezza massima stimata</option></select></label><div class="form-grid"><label id="general-a-label">Potenza (kW)<input id="general-a" type="text" inputmode="decimal" value="1"></label><label id="general-b-label">Tensione (V)<input id="general-b" type="text" inputmode="decimal" value="230"></label></div><div id="max-length-fields" hidden><div class="form-grid"><label>Tensione (V)<input id="general-voltage" type="text" inputmode="decimal" value="230"></label><label>Corrente (A)<input id="general-current" type="text" inputmode="decimal" value="16"></label></div><div class="chip-row"><button class="chip active" id="general-copper">Rame</button><button class="chip" id="general-aluminium">Alluminio</button></div></div><label id="power-factor-label">cos φ (0–1)<input id="power-factor" type="text" inputmode="decimal" value="0,9"></label><button class="button primary wide" id="calc-general">Calcola</button><p id="general-result" class="result"></p><p class="hint">Formule semplificate per stime rapide.</p></article>
+        <article class="card"><h3>Calcolo superficie / volume</h3><label>Calcolo<select id="area-kind"><option value="area">Superficie</option><option value="volume">Volume</option></select></label><label>Lunghezza / base (m)<input id="area-a" type="text" inputmode="decimal" value="20"></label><div class="form-grid"><label>Larghezza (m)<input id="area-b" type="text" inputmode="decimal" value="10"></label><label id="area-height-label" hidden>Altezza (m)<input id="area-c" type="text" inputmode="decimal" value="2,5"></label></div><button class="button primary wide" id="calc-area">Calcola</button><p id="area-result" class="result"></p></article>
+        <article class="card"><h3>Dimensionamento preliminare cavo e protezione</h3><p class="hint">Inserisci Iz corretta per sezione, posa e condizioni d’installazione.</p><div class="chip-row"><button class="chip active" id="guided-single">Monofase</button><button class="chip" id="guided-three">Trifase</button></div><div class="form-grid"><label>Tensione (V)<input id="guided-voltage" type="text" inputmode="decimal" value="230"></label><label>Corrente Ib (A)<input id="guided-current" type="text" inputmode="decimal" value="16"></label><label>Lunghezza tratta (m)<input id="guided-length" type="text" inputmode="decimal" value="25"></label><label>Sezione cavo (mm²)<input id="guided-section" type="text" inputmode="decimal" value="2,5"></label></div><div class="chip-row"><button class="chip active" id="guided-copper">Rame</button><button class="chip" id="guided-aluminium">Alluminio</button></div><div class="form-grid"><label>cos φ<input id="guided-cosphi" type="text" inputmode="decimal" value="0,9"></label><label>Caduta limite (%)<input id="guided-limit" type="text" inputmode="decimal" value="3"></label><label>Protezione In (A)<input id="guided-in" type="text" inputmode="decimal" value="16"></label><label>Portata corretta Iz (A)<input id="guided-iz" type="text" inputmode="decimal" value="24"></label></div><button class="button primary wide" id="calc-guided">Verifica cavo e protezione</button><p id="guided-result" class="result"></p><p class="hint">Controllo preliminare: non verifica cortocircuito, tempi d’intervento o selettività. Conferma dati e condizioni di posa secondo le norme applicabili.</p></article>
+      </div>
+      <div class="utility-panel" id="utility-motor">
+        <article class="card"><h3>Corrente nominale stimata</h3><div class="chip-row"><button class="chip" id="motor-single">Monofase</button><button class="chip active" id="motor-three">Trifase</button></div><div class="form-grid"><label>Potenza (kW)<input id="motor-power" type="text" inputmode="decimal" value="0,75"></label><label>Tensione (V)<input id="motor-voltage" type="text" inputmode="decimal" value="400"></label><label>cos φ<input id="motor-cosphi" type="text" inputmode="decimal" value="0,8"></label><label>Rendimento (η)<input id="motor-efficiency" type="text" inputmode="decimal" value="0,8"></label></div><button class="button primary wide" id="calc-motor">Calcola corrente</button><p id="motor-result" class="result"></p><p class="hint">Stima: usa i dati di targa per un risultato affidabile.</p></article><article class="card"><h3>Motore trifase → monofase · condensatore</h3><label>Potenza motore (kW)<input id="motor-cap-power" type="text" inputmode="decimal" value="0,75"></label><button class="button secondary wide" id="calc-capacitor">Stima condensatore</button><p id="capacitor-result" class="result"></p><p class="hint">La stima è indicativa e non sostituisce lo schema del costruttore.</p></article>
+      </div>
+      <div class="utility-panel" id="utility-conversions">
+        <article class="card"><h3>Conversioni</h3><label>Tipo<select id="conversion-kind"><option value="area">Sezione ↔ AWG</option><option value="length">Metri ↔ piedi</option><option value="voltage">Volt efficaci ↔ picco</option><option value="power">kW ↔ CV</option><option value="temperature">°C ↔ °F</option></select></label><div class="chip-row" id="conversion-directions"><button class="chip active" id="conversion-forward">Da A a B</button><button class="chip" id="conversion-reverse">Da B a A</button></div><label>Valore<input id="conversion-value" type="text" inputmode="decimal" value="2,5"></label><button class="button primary wide" id="convert-value">Converti</button><p id="conversion-result" class="result"></p><p class="hint">Equivalenze indicative; per sezione e portata verificare posa e condizioni d’installazione.</p></article>
+      </div>
+      <div class="utility-panel" id="utility-pinouts">
+        <article class="card"><h3>Piedinature di riferimento</h3><p class="hint">Schemi generici. Controlla sempre la documentazione del dispositivo prima di collegare.</p><label>Connettore<select id="pinout-kind"><option value="rj45b">Ethernet RJ-45 · T568B</option><option value="rj45a">Ethernet RJ-45 · T568A</option><option value="usb-a">USB-A</option><option value="molex">Molex 4 pin</option><option value="rs232">Seriale RS-232 · DB9</option></select></label><div id="pinout-table" class="pinout-table"></div></article>
+      </div>
     </section>
   </main>
   <nav class="bottom-nav" aria-label="Navigazione principale">
-    <button class="nav-button active" data-screen="entry"><span>＋</span>Rapportino</button><button class="nav-button" data-screen="register"><span>▤</span>Struttura</button><button class="nav-button" data-screen="board"><span>▥</span>Plancia</button><button class="nav-button" data-screen="tools"><span>⌁</span>Utility</button>
+    <button class="nav-button" data-screen="register"><span>▤</span>Anagrafica</button><button class="nav-button active" data-screen="entry"><span>✎</span>Compila</button><button class="nav-button" data-screen="board"><span>▥</span>Plancia</button><button class="nav-button" data-screen="tools"><span>⌁</span>Utility</button>
   </nav>
+  <section id="photo-modal" class="photo-modal" hidden aria-labelledby="photo-modal-title" role="dialog" aria-modal="true"><div class="photo-dialog"><div class="row-between"><h2 id="photo-modal-title">Foto cantiere</h2><button id="close-photo-modal" class="mini-button" aria-label="Chiudi foto">✕</button></div><p class="hint">Le foto vengono compresse e incluse nel backup condiviso con Android.</p><label>Cliente<select id="photo-customer"></select></label><label>Cantiere<select id="photo-site"></select></label><label class="button secondary wide file-button">Scatta o scegli foto<input id="photo-input" type="file" accept="image/*" capture="environment" multiple></label><div id="photo-gallery" class="photo-grid"></div></div></section>
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="app.js" defer></script>
+  <script src="app.js?v=2" defer></script>
 </body>
 </html>

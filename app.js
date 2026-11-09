@@ -215,7 +215,36 @@
   function renderPinout(){const root=$('pinout-table');if(!root)return;root.replaceChildren();const data=pinouts[$('pinout-kind').value];root.append(el('strong','',data.title));const table=document.createElement('table'),body=document.createElement('tbody');for(const [pin,signal]of data.rows){const row=document.createElement('tr'),a=document.createElement('th'),b=document.createElement('td');a.scope='row';a.textContent=pin;b.textContent=signal;row.append(a,b);body.append(row);}table.append(body);root.append(table);}
   function renderPhotoSites(){const c=db.clienti.find(x=>x.id===$('photo-customer').value),select=$('photo-site'),previous=select.value,targets=[];if(c)targets.push({id:'__cliente__',nome:'Foto cliente'});targets.push(...(c?.cantieri||[]));fillSelect(select,targets,'Seleziona destinazione',previous);if(c&&!select.value)select.value=c.cantieri.length?'':'__cliente__';}
   function photoTarget(){const c=db.clienti.find(x=>x.id===$('photo-customer').value);if(!c)return null;if($('photo-site').value==='__cliente__')return {customer:c,site:null,photos:c.fotoData||(c.fotoData=[]),name:c.nome};const site=c.cantieri.find(x=>x.id===$('photo-site').value);return site?{customer:c,site,photos:site.fotoData||(site.fotoData=[]),name:site.nome}:null;}
-  function renderPhotos(){const root=$('photo-gallery');if(!root)return;root.replaceChildren();const target=photoTarget();if(!target){root.append(el('div','empty','Seleziona un cliente e una destinazione per vedere le foto.'));return;}if(!target.photos.length){root.append(el('div','empty','Nessuna foto salvata.'));return;}for(const [index,src]of target.photos.entries()){const item=el('div','photo-item'),img=document.createElement('img');img.src=src;img.alt=`Foto ${index+1} ${target.name}`;const remove=el('button','','×');remove.setAttribute('aria-label','Elimina foto');remove.onclick=()=>{if(confirm('Eliminare la foto?')){target.photos.splice(index,1);saveDb();}};item.append(img,remove);root.append(item);}}
+  function renderPhotos(){
+    const root=$('photo-gallery');if(!root)return;root.replaceChildren();const target=photoTarget();
+    if(!target){root.append(el('div','empty','Seleziona un cliente e una destinazione per vedere le foto.'));return;}
+    if(!target.photos.length){root.append(el('div','empty',target.site?'Nessuna foto salvata in questo cantiere.':'Nessuna foto generale salvata per questo cliente.'));return;}
+    for(const [index,src]of target.photos.entries()){
+      const item=el('article','photo-item'),img=document.createElement('img');
+      const luogo=target.site?`Cliente: ${target.customer.nome} · Cantiere: ${target.site.nome}`:`Cliente: ${target.customer.nome} · Foto non associate a un cantiere`;
+      img.src=src;img.alt=`Foto ${index+1}. ${luogo}`;
+      const meta=el('div','photo-meta',luogo),actions=el('div','photo-actions');
+      const share=el('button','mini-button','Condividi');share.setAttribute('aria-label',`Condividi foto ${index+1}. ${luogo}`);share.onclick=()=>sharePhoto(src,target,index);
+      const remove=el('button','mini-button danger','Elimina');remove.setAttribute('aria-label',`Elimina foto ${index+1}`);remove.onclick=()=>{if(confirm('Eliminare la foto?')){target.photos.splice(index,1);saveDb();}};
+      actions.append(share,remove);item.append(img,meta,actions);root.append(item);
+    }
+  }
+  function photoSlug(value){return String(value||'foto').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,48)||'foto';}
+  async function sharePhoto(src,target,index){
+    try{
+      const match=/^data:image\/jpeg;base64,([A-Za-z0-9+/]+={0,2})$/.exec(String(src));if(!match)throw Error('Foto non disponibile in un formato condivisibile.');
+      const binary=atob(match[1]),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+      const blob=new Blob([bytes],{type:'image/jpeg'}),filename=`${photoSlug(target.customer.nome)}_${photoSlug(target.site?.nome||'foto_cliente')}_${index+1}.jpg`;
+      const text=target.site?`Cliente: ${target.customer.nome}\nCantiere: ${target.site.nome}`:`Cliente: ${target.customer.nome}\nFoto non associate a un cantiere`;
+      if(navigator.share&&typeof File==='function'){
+        const file=new File([blob],filename,{type:'image/jpeg'});
+        let supportaFile=false;try{supportaFile=typeof navigator.canShare==='function'&&navigator.canShare({files:[file]});}catch(_){supportaFile=false;}
+        if(supportaFile){try{await navigator.share({files:[file],title:'Foto registro ore',text});return;}catch(error){if(error?.name==='AbortError')return;}}
+      }
+      const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=filename;link.click();setTimeout(()=>URL.revokeObjectURL(url),5000);
+      notify('Foto scaricata con cliente e cantiere nel nome: puoi inoltrarla dalla galleria del dispositivo.');
+    }catch(error){if(error?.name==='AbortError')return;console.error(error);notify('Non è stato possibile condividere la foto.');}
+  }
   async function addPhotos(files){const target=photoTarget();if(!target){notify('Seleziona cliente e destinazione.');return;}for(const file of files){if(!file.type.startsWith('image/'))continue;if(target.photos.length>=200){notify('Massimo 200 foto per destinazione.');break;}try{const data=await compressImage(file);if(data.length>2800200){notify('Foto troppo grande anche dopo la compressione.');continue;}target.photos.push(data);}catch(error){console.error(error);notify('Una foto non è stata caricata.');}}await saveDb();renderPhotos();$('photo-input').value='';}
   function compressImage(file){return new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{const scale=Math.min(1,1280/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);canvas.toBlob(blob=>{if(!blob){reject(Error('Compressione non riuscita'));return;}const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(blob);},'image/jpeg',.68);};img.onerror=()=>{URL.revokeObjectURL(url);reject(Error('Immagine non leggibile'));};img.src=url;});}
   function renderPhotoSitesAndGallery(){renderPhotoSites();renderPhotos();}

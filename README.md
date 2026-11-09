@@ -36,6 +36,7 @@ Il JSON portatile versione 2 usa i campi comuni del progetto Android (`nomeOpera
 - Quadro elettrico senza marche, con le stesse famiglie dell'app Android: protezioni, orologi, trasformatori, alimentatori, dispositivi di misura, barre e morsettiere; poli, moduli (fino a 24) e lato neutro selezionabili.
 - Calcolatore elettrico, superficie/volume, verifica preliminare cavo e protezione, motore, conversioni e piedinature comuni.
 - Foto cliente e cantiere compresse in galleria e incluse nel backup JSON.
+- Ogni foto mostra chiaramente cliente e cantiere, oppure indica che è una foto generale del cliente; il comando **Condividi** invia l’immagine e la sua posizione, con scaricamento nominato come alternativa se il browser non supporta la condivisione.
 
 La PWA locale usa la stessa icona lampadina dell'app Android. Per le prove usa un archivio browser separato dalla versione pubblicata.
 

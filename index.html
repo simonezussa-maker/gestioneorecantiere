@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="app.css?v=3">
+  <link rel="stylesheet" href="app.css?v=4">
 </head>
 <body>
   <header class="topbar">
@@ -87,6 +87,6 @@
   <section id="photo-modal" class="photo-modal" hidden aria-labelledby="photo-modal-title" role="dialog" aria-modal="true"><div class="photo-dialog"><div class="row-between"><h2 id="photo-modal-title">Foto cantiere o cliente</h2><button id="close-photo-modal" class="mini-button" aria-label="Chiudi foto">✕</button></div><p class="hint">Le foto vengono compresse e incluse nel backup condiviso con Android.</p><label>Cliente<select id="photo-customer"></select></label><label>Destinazione<select id="photo-site"></select></label><label class="button secondary wide file-button">Scatta o scegli foto<input id="photo-input" type="file" accept="image/*" capture="environment" multiple></label><div id="photo-gallery" class="photo-grid"></div></div></section>
   <section id="settings-modal" class="photo-modal" hidden aria-labelledby="settings-title" role="dialog" aria-modal="true"><div class="photo-dialog"><div class="row-between"><h2 id="settings-title">Impostazioni</h2><button id="settings-close" class="mini-button" aria-label="Chiudi impostazioni">✕</button></div><label class="field-label" for="setting-name">Nome / intestazione report</label><input id="setting-name" maxlength="300"><label class="field-label" for="setting-hours">Ore precompilate nel rapportino</label><input id="setting-hours" type="text" inputmode="decimal" placeholder="8,5"><label class="field-label" for="setting-overtime-rate">Tariffa straordinario (€/h)</label><input id="setting-overtime-rate" type="text" inputmode="decimal" placeholder="0"><p class="hint">La tariffa è una stima personale applicata alle ore straordinarie del riepilogo.</p><div class="action-row"><button class="button secondary" id="settings-cancel">Annulla</button><button class="button primary" id="settings-save">Salva</button></div></div></section>
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="app.js?v=3" defer></script>
+  <script src="app.js?v=4" defer></script>
 </body>
 </html>

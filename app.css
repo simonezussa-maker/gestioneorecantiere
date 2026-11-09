@@ -69,6 +69,7 @@ select{appearance:auto}
 .stats-grid strong{font-size:18px}
 .stats-grid article:nth-child(2) strong{color:var(--secondary)}
 .stats-grid article:nth-child(3) strong{color:var(--gold)}
+#overtime-value{min-height:12px;font-size:9px;color:var(--muted);font-weight:700}
 .progress-wrap{margin:10px 0 14px}
 .progress-label{display:flex;justify-content:space-between;gap:8px;font-size:10px;color:var(--muted);margin-bottom:6px}
 .progress{height:7px;background:var(--surface-variant);border-radius:10px;overflow:hidden}
@@ -121,6 +122,7 @@ select{appearance:auto}
 .photo-modal[hidden],[hidden]{display:none!important}
 .photo-dialog{width:min(100%,560px);max-height:min(88dvh,850px);overflow:auto;padding:18px;background:var(--surface);border-radius:18px;box-shadow:0 18px 60px #0003}
 .photo-dialog h2{font-size:20px}
+#undo-import{margin:0 0 12px}
 @media(min-width:650px){main{padding-left:24px;padding-right:24px}.utility-tabs{margin-left:-24px;margin-right:-24px;padding-left:24px;padding-right:24px}}
 @media(max-width:380px){main{padding-left:12px;padding-right:12px}.stats-grid strong{font-size:15px}.quick-hours button{font-size:11px}.row-actions{gap:4px}.mini-button{padding:6px 7px}}
 @media print{body{padding:0;background:white}.topbar,.bottom-nav,.action-row,.utility-tabs,#toast{display:none!important}main{padding:0}.screen{display:none!important}#screen-board{display:block!important}.card,.report-card{box-shadow:none}}

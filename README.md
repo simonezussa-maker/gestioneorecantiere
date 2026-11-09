@@ -23,19 +23,19 @@ L’app salva i rapportini localmente sul dispositivo. Per passare i dati fra An
 2. Nell’app di arrivo scegli **Ripristina** e seleziona quel JSON.
 3. Il ripristino sostituisce l’archivio corrente: prima esporta un backup di sicurezza.
 
-Il JSON portatile versionato usa i campi comuni del progetto Android (`nomeOperaio`, `clienti`, `cantieri`, `interni`, `quadroElettrico`, `rapportini`) e aggiunge le foto JPEG compresse associate all'ID del cantiere. I percorsi privati del telefono non vengono esportati. La PWA importa anche i vecchi JSON senza foto e i precedenti backup PWA con foto JPEG. Il ripristino sostituisce l'archivio corrente: prima esporta un backup di sicurezza.
+Il JSON portatile versione 2 usa i campi comuni del progetto Android (`nomeOperaio`, `clienti`, `cantieri`, `interni`, `quadroElettrico`, `rapportini`, ore predefinite e tariffa straordinaria) e aggiunge foto JPEG compresse associate al cliente o al cantiere. I percorsi privati del telefono non vengono esportati. Android e PWA importano anche il formato versione 1 e i vecchi JSON senza foto. Prima di ogni ripristino viene conservata una copia locale recuperabile dal pulsante “Recupera dati precedenti al ripristino”.
 
 ## Funzioni
 
 - Clienti, cantieri, interni e componenti del quadro elettrico.
 - Rapportini lavoro, malattia, ferie, permesso e congedo.
 - Cantiere facoltativo per il lavoro presso il cliente.
-- Turno predefinito di 8,5 ore: 8 ordinarie e 0,5 straordinarie.
+- Ore predefinite configurabili per il rapportino e tariffa personale degli straordinari, con stima economica nella Plancia.
 - Plancia mensile, filtri, ricerca, controllo giornate, CSV e stampa/PDF.
 - Backup JSON compatibile con l’app Android.
 - Quadro elettrico senza marche, con le stesse famiglie dell'app Android: protezioni, orologi, trasformatori, alimentatori, dispositivi di misura, barre e morsettiere; poli, moduli (fino a 24) e lato neutro selezionabili.
 - Calcolatore elettrico, superficie/volume, verifica preliminare cavo e protezione, motore, conversioni e piedinature comuni.
-- Foto compresse in galleria e incluse nel backup JSON.
+- Foto cliente e cantiere compresse in galleria e incluse nel backup JSON.
 
 La PWA locale usa la stessa icona lampadina dell'app Android. Per le prove usa un archivio browser separato dalla versione pubblicata.
 

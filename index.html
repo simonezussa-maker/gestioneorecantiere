@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="app.css?v=2">
+  <link rel="stylesheet" href="app.css?v=3">
 </head>
 <body>
   <header class="topbar">
@@ -32,7 +32,7 @@
       <article class="hours-card">
         <div class="hours-row"><div><div class="eyebrow">ORE DEL GIORNO</div><strong id="hours-value">8.5</strong><span class="hours-unit">h</span></div><div class="stepper"><button id="hours-minus" aria-label="Diminuisci ore">−</button><button id="hours-plus" aria-label="Aumenta ore">+</button></div></div>
         <div class="quick-hours"><button data-hours="4">4 h</button><button data-hours="8">8 h</button><button data-hours="8.5">8,5 h</button><button data-hours="9">9 h</button><button data-hours="10">10 h</button></div>
-        <p class="hint">Turno tipico: 8 ore ordinarie + 0,5 straordinarie.</p>
+        <p class="hint">Puoi impostare le ore predefinite e la tariffa straordinaria da Impostazioni.</p>
       </article>
       <div id="expenses-field"><label class="field-label" for="expenses">Spese anticipate (€)</label><input id="expenses" type="number" inputmode="decimal" min="0" step="0.01" value="0"></div>
       <label class="field-label" for="notes">Note di cantiere</label><textarea id="notes" rows="2" maxlength="2000" placeholder="Aggiungi una nota…"></textarea>
@@ -41,16 +41,16 @@
 
     <section class="screen" id="screen-register">
       <div class="section-heading"><div><div class="eyebrow">CLIENTI E CANTIERI</div><h2>Anagrafica</h2></div><button class="button primary compact" id="add-customer">＋ Cliente</button></div>
-      <div class="action-row"><button class="button secondary" id="export-backup">Esporta backup + foto</button><button class="button secondary" id="import-backup">Ripristina</button><input id="backup-file" type="file" accept="application/json,.json" hidden></div>
+      <div class="action-row"><button class="button secondary" id="export-backup">Esporta backup + foto</button><button class="button secondary" id="import-backup">Ripristina</button><input id="backup-file" type="file" accept="application/json,.json" hidden></div><button class="button secondary wide" id="undo-import" hidden>Recupera dati precedenti al ripristino</button>
       <div id="customer-list" class="stack"></div>
     </section>
 
     <section class="screen" id="screen-board">
-      <div class="section-heading"><div><div class="eyebrow">RIEPILOGO</div><h2>Plancia</h2></div><button class="profile-name" id="profile-name"></button></div>
+      <div class="section-heading"><div><div class="eyebrow">RIEPILOGO</div><h2>Plancia</h2></div><div class="row-actions"><button class="profile-name" id="profile-name"></button><button class="button secondary compact" id="settings-open">Impostazioni</button></div></div>
       <div class="month-control"><button id="month-prev" aria-label="Mese precedente">‹</button><strong id="month-label"></strong><button id="month-next" aria-label="Mese successivo">›</button></div>
       <div class="filter-grid"><select id="filter-type"><option value="TUTTI">Tutti i tipi</option><option>LAVORO</option><option>MALATTIA</option><option>FERIE</option><option>PERMESSO</option><option>CONGEDO</option></select><select id="filter-customer"><option value="">Tutti i clienti</option></select></div>
       <input id="search" type="search" placeholder="Cerca cliente, cantiere o note…">
-      <div class="stats-grid"><article><span>ORDINARIE</span><strong id="total-ordinary">0 h</strong></article><article><span>STRAORDINARIE</span><strong id="total-overtime">0 h</strong></article><article><span>SPESE</span><strong id="total-expenses">€ 0</strong></article></div>
+      <div class="stats-grid"><article><span>ORDINARIE</span><strong id="total-ordinary">0 h</strong></article><article><span>STRAORDINARIE</span><strong id="total-overtime">0 h</strong><small id="overtime-value"></small></article><article><span>SPESE</span><strong id="total-expenses">€ 0</strong></article></div>
       <div class="progress-wrap"><div class="progress-label"><span>Ore ordinarie / obiettivo feriale</span><span id="progress-text">0 / 0 h</span></div><div class="progress"><i id="progress-bar"></i></div></div>
       <button class="button secondary wide" id="check-gaps">Controlla giornate mancanti</button>
       <div id="report-list" class="stack"></div>
@@ -84,8 +84,9 @@
   <nav class="bottom-nav" aria-label="Navigazione principale">
     <button class="nav-button" data-screen="register"><span>▤</span>Anagrafica</button><button class="nav-button active" data-screen="entry"><span>✎</span>Compila</button><button class="nav-button" data-screen="board"><span>▥</span>Plancia</button><button class="nav-button" data-screen="tools"><span>⌁</span>Utility</button>
   </nav>
-  <section id="photo-modal" class="photo-modal" hidden aria-labelledby="photo-modal-title" role="dialog" aria-modal="true"><div class="photo-dialog"><div class="row-between"><h2 id="photo-modal-title">Foto cantiere</h2><button id="close-photo-modal" class="mini-button" aria-label="Chiudi foto">✕</button></div><p class="hint">Le foto vengono compresse e incluse nel backup condiviso con Android.</p><label>Cliente<select id="photo-customer"></select></label><label>Cantiere<select id="photo-site"></select></label><label class="button secondary wide file-button">Scatta o scegli foto<input id="photo-input" type="file" accept="image/*" capture="environment" multiple></label><div id="photo-gallery" class="photo-grid"></div></div></section>
+  <section id="photo-modal" class="photo-modal" hidden aria-labelledby="photo-modal-title" role="dialog" aria-modal="true"><div class="photo-dialog"><div class="row-between"><h2 id="photo-modal-title">Foto cantiere o cliente</h2><button id="close-photo-modal" class="mini-button" aria-label="Chiudi foto">✕</button></div><p class="hint">Le foto vengono compresse e incluse nel backup condiviso con Android.</p><label>Cliente<select id="photo-customer"></select></label><label>Destinazione<select id="photo-site"></select></label><label class="button secondary wide file-button">Scatta o scegli foto<input id="photo-input" type="file" accept="image/*" capture="environment" multiple></label><div id="photo-gallery" class="photo-grid"></div></div></section>
+  <section id="settings-modal" class="photo-modal" hidden aria-labelledby="settings-title" role="dialog" aria-modal="true"><div class="photo-dialog"><div class="row-between"><h2 id="settings-title">Impostazioni</h2><button id="settings-close" class="mini-button" aria-label="Chiudi impostazioni">✕</button></div><label class="field-label" for="setting-name">Nome / intestazione report</label><input id="setting-name" maxlength="300"><label class="field-label" for="setting-hours">Ore precompilate nel rapportino</label><input id="setting-hours" type="text" inputmode="decimal" placeholder="8,5"><label class="field-label" for="setting-overtime-rate">Tariffa straordinario (€/h)</label><input id="setting-overtime-rate" type="text" inputmode="decimal" placeholder="0"><p class="hint">La tariffa è una stima personale applicata alle ore straordinarie del riepilogo.</p><div class="action-row"><button class="button secondary" id="settings-cancel">Annulla</button><button class="button primary" id="settings-save">Salva</button></div></div></section>
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="app.js?v=2" defer></script>
+  <script src="app.js?v=3" defer></script>
 </body>
 </html>

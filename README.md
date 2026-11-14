@@ -1,10 +1,10 @@
-# Registro Ore Cantieri — PWA di prova
+# Registro Ore Cantieri — PWA aggiornata
 
-Questa è una copia di prova locale basata sui sorgenti PWA più recenti disponibili. Le modifiche restano in questa cartella e non vengono pubblicate sul sito GitHub Pages.
+Questo ZIP contiene i file completi necessari per aggiornare la PWA. Le modifiche restano locali finché non carichi i file sul repository GitHub Pages.
 
-## Avvio per le prove
+## Aggiornamento su GitHub Pages
 
-Estrai lo ZIP e fai doppio clic su `Avvia_test_PWA.bat`. Si apre il browser su un indirizzo locale (`127.0.0.1:8766`); la finestra di PowerShell resta aperta finché il server di prova è attivo. Chiudila per fermarlo. La porta dedicata separa questo archivio di prova dai dati del sito e dalla vecchia PWA locale. Non carica né pubblica file online.
+Estrai lo ZIP e carica i file contenuti nella cartella direttamente nella stessa cartella del repository dove si trova `index.html`. Questa cartella include l’intera PWA: non caricare solo `app.js` o solo i file modificati. La pubblicazione avviene quando confermi il caricamento su GitHub.
 
 ## Installazione su iPhone
 
@@ -23,21 +23,31 @@ L’app salva i rapportini localmente sul dispositivo. Per passare i dati fra An
 2. Nell’app di arrivo scegli **Ripristina** e seleziona quel JSON.
 3. Il ripristino sostituisce l’archivio corrente: prima esporta un backup di sicurezza.
 
-Il JSON portatile versione 2 usa i campi comuni del progetto Android (`nomeOperaio`, `clienti`, `cantieri`, `interni`, `quadroElettrico`, `rapportini`, ore predefinite e tariffa straordinaria) e aggiunge foto JPEG compresse associate al cliente o al cantiere. I percorsi privati del telefono non vengono esportati. Android e PWA importano anche il formato versione 1 e i vecchi JSON senza foto. Prima di ogni ripristino viene conservata una copia locale recuperabile dal pulsante “Recupera dati precedenti al ripristino”.
+Il JSON portatile versione 3 usa i campi comuni del progetto Android (`nomeOperaio`, `clienti`, `cantieri`, `interni`, `quadroElettrico`, `rapportini`, ore predefinite e tariffa straordinaria), aggiunge le foto JPEG e conserva nome, note, disposizione, apparecchi e collegamenti dei quadri. La lista materiali mantiene colore, marca, serie e gli articoli configurati; i codici sono usati per ricerca e compatibilità ma non mostrati nella lista. La libreria dei quadri salvati resta nel backup. La PWA mantiene però l’editor dei quadri legato a cliente/cantiere e non ha ancora l’editor a schermo intero né la gestione della libreria libera presenti in Android. I percorsi privati del telefono non vengono esportati. Android e PWA importano i formati versione 1, 2 e 3 e i vecchi JSON senza foto. Prima di ogni ripristino viene conservata una copia locale recuperabile dal pulsante “Recupera dati precedenti al ripristino”.
 
 ## Funzioni
 
 - Clienti, cantieri, interni e componenti del quadro elettrico.
 - Rapportini lavoro, malattia, ferie, permesso e congedo.
 - Cantiere facoltativo per il lavoro presso il cliente.
-- Ore predefinite configurabili per il rapportino e tariffa personale degli straordinari, con stima economica nella Plancia.
-- Plancia mensile, filtri, ricerca, controllo giornate, CSV e stampa/PDF.
+- Ore predefinite configurabili per il rapportino, preset rapidi 1, 2, 4, 8 e 8,5 ore e sottrazione delle ore già registrate nella stessa giornata; tariffa personale degli straordinari con stima economica nel Registro.
+- Registro mensile, filtri, ricerca, controllo giornate, CSV e stampa/PDF.
 - Backup JSON compatibile con l’app Android.
-- Quadro elettrico senza marche, con le stesse famiglie dell'app Android: protezioni, orologi, trasformatori, alimentatori, dispositivi di misura, barre e morsettiere; poli, moduli (fino a 24) e lato neutro selezionabili.
+- Lista materiali con categorie, scelta misura per morsetti e scatole PT4–PT10, colore per cavi unipolari/tubo corrugato, marca e serie opzionali per frutti, configurazione di poli/amperaggio/curva/classe/sensibilità per protezioni e inoltro della lista tramite condivisione del dispositivo.
+- Disegno orientativo del quadro senza marche: più file DIN, moduli per fila configurabili, spostamento e modifica degli apparecchi, poli, lato neutro, sigla, circuito, corrente, curva/classe e dati differenziali. Collegamenti colorati salvati nel backup; esportazione del disegno in SVG.
 - Calcolatore elettrico, superficie/volume, verifica preliminare cavo e protezione, motore, conversioni e piedinature comuni.
 - Foto cliente e cantiere compresse in galleria e incluse nel backup JSON.
+- Tema chiaro o scuro in base alle impostazioni del dispositivo.
 - Ogni foto mostra chiaramente cliente e cantiere, oppure indica che è una foto generale del cliente; il comando **Condividi** invia l’immagine e la sua posizione, con scaricamento nominato come alternativa se il browser non supporta la condivisione.
 
 La PWA locale usa la stessa icona lampadina dell'app Android. Per le prove usa un archivio browser separato dalla versione pubblicata.
+
+## Allineamento e prove ancora da fare
+
+- Catalogo materiali, opzioni di configurazione e piedinature sono allineati alla versione Android esaminata.
+- La condivisione della lista è stata aperta con il pannello nativo di Windows. Va confermata su Android e Safari/iPhone, che non sono disponibili in questa prova.
+- Il layout è stato controllato nel browser a larghezza ridotta; l’installazione e l’uso reale su iPhone restano da provare.
+- La registrazione e sincronizzazione di un nuovo utente verranno verificate nel test successivo, dopo aver caricato questo ZIP.
+- La principale differenza funzionale ancora nota è l’editor dei quadri descritto sopra.
 
 I dati restano nel browser del dispositivo. Esporta regolarmente un backup, soprattutto prima di cancellare i dati di Safari o cambiare telefono.

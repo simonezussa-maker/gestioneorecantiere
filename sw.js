@@ -1,5 +1,5 @@
-const CACHE = 'registro-ore-pwa-multiazienda-materiali-v16';
-const FILES = ['./', './index.html', './app.css?v=12', './cloud.js?v=5', './app.js?v=14', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+const CACHE = 'registro-ore-pwa-multiazienda-quadri-v18';
+const FILES = ['./', './index.html', './app.css?v=13', './cloud.js?v=5', './app.js?v=16', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)).then(() => self.skipWaiting())));
 self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim())));
 self.addEventListener('fetch', event => {

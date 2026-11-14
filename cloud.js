@@ -3,7 +3,7 @@
 (() => {
   'use strict';
   const SUPABASE_URL = 'https://xpqznrkioghpexgvtenh.supabase.co';
-  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_9IQ4R5wiNz1kwS3I2TQmA_1Q7Spw_-';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_H4ZpHi9BakagIcJwsBvRRA_-HHK5Uhs';
   const SESSION_KEY = 'registro-ore-cloud-session-v1';
   const WORKER_URL_KEY = 'registro-ore-worker-url-v1';
   let session = null;

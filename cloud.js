@@ -173,19 +173,29 @@
     const result = await api('/rest/v1/rpc/create_workspace', { method: 'POST', body: JSON.stringify({ workspace_name: name.trim() }) });
     return String(result);
   }
+  async function manageMembersApi(path, options = {}) {
+    if (!session?.access_token) throw Error('Accedi per continuare.');
+    return api('/functions/v1/manage-members' + path, options);
+  }
   async function listWorkspaces() {
-    const result = await workerApi('/workspaces');
+    const result = await manageMembersApi('?action=workspaces');
     return result.workspaces || [];
   }
   async function listMembers(workspaceId) {
-    const query = new URLSearchParams({ workspaceId });
-    return workerApi(`/members?${query}`);
+    const query = new URLSearchParams({ action: 'members', workspaceId });
+    return manageMembersApi('?' + query);
   }
   async function inviteMember(workspaceId, member) {
-    return workerApi('/members', { method: 'POST', body: JSON.stringify({ workspaceId, ...member }) });
+    return manageMembersApi('', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'invite', workspaceId, ...member })
+    });
   }
   async function updateMember(workspaceId, memberId, update) {
-    return workerApi(`/members/${encodeURIComponent(memberId)}`, { method: 'PATCH', body: JSON.stringify({ workspaceId, ...update }) });
+    return manageMembersApi('', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'update', workspaceId, memberId, ...update })
+    });
   }
   async function listPhotos(workspaceId) {
     const query = new URLSearchParams({ workspaceId });

@@ -168,10 +168,10 @@
   async function openMemberManager(workspaceId=cloudMembership?.workspace_id){
     memberManageWorkspaceId=workspaceId||'';
     const workspace=accountMemberships.find(item=>item.workspace_id===memberManageWorkspaceId)?.workspace?.name||platformWorkspaceRows.find(item=>item.id===memberManageWorkspaceId)?.name||'';
-    $('member-modal-title').textContent=workspace?`Accessi · ${workspace}`:'Accessi azienda';
-    $('member-modal').hidden=false;$('worker-url').value=CloudRegistro.currentWorkerUrl();
+    $('member-modal-title').textContent=workspace?('Accessi · '+workspace):'Accessi azienda';
+    $('member-modal').hidden=false;
     addPermissionInputs($('invite-permissions'),{},platformMaster||Boolean(cloudMembership?.is_admin||cloudMembership?.is_titular));
-    if(CloudRegistro.currentWorkerUrl())await loadMemberList();else{$('member-list').replaceChildren(el('p','hint','Inserisci l’URL del Worker Cloudflare e premi Collega per caricare gli account.'));$('member-error').textContent='';}
+    await loadMemberList();
   }
   async function loadWorkspaceList(){
     const root=$('platform-workspaces-list');root.replaceChildren(el('p','hint','Caricamento aziende…'));$('platform-error').textContent='';
@@ -181,7 +181,8 @@
   }
   async function openPlatformWorkspaces(){
     if(!platformMaster){notify('Questa funzione è riservata al master.');return;}
-    $('platform-workspaces-modal').hidden=false;$('platform-worker-url').value=CloudRegistro.currentWorkerUrl();await loadWorkspaceList();
+    $('platform-workspaces-modal').hidden=false;
+    await loadWorkspaceList();
   }
   async function createCompany(event){
     event.preventDefault();const name=$('workspace-name').value.trim();if(name.length<2||name.length>160){$('platform-error').textContent='Il nome deve contenere da 2 a 160 caratteri.';return;}
@@ -196,10 +197,6 @@
     if(accountMemberships.length){const key=activeWorkspaceStorageKey(),saved=key?localStorage.getItem(key):null,selected=accountMemberships.find(item=>item.workspace_id===saved);if(selected)await chooseWorkspace(selected);else if(accountMemberships.length===1)await chooseWorkspace(accountMemberships[0]);else showWorkspacePicker(accountMemberships);return;}
     if(platformMaster){document.body.classList.add('platform-only');$('auth-screen').hidden=true;$('account-bar').hidden=true;await openPlatformWorkspaces();return;}
     throw Error('Account autenticato ma non ancora associato a un’azienda. Chiedi al master di completare l’invito.');
-  }
-  async function saveWorkerConfiguration(){
-    try{CloudRegistro.configureWorker($('worker-url').value);$('member-error').textContent='URL Worker salvato su questo dispositivo.';if(memberManageWorkspaceId)await loadMemberList();if(!$('platform-workspaces-modal').hidden)await loadWorkspaceList();}
-    catch(error){$('member-error').textContent=error.message;}
   }
   async function connectPhotoWorker(){try{CloudRegistro.configureWorker($('photo-worker-url').value);$('photo-worker-error').textContent='Collegamento salvato su questo dispositivo. Premi Sincronizza per caricare le foto locali autorizzate.';cloudPhotoMetadataWorkspace='';await loadCloudPhotoMetadata();renderPhotos();notify('Collegamento foto salvato.');}catch(error){$('photo-worker-error').textContent=error.message;}}
   async function submitMemberInvite(event){
@@ -638,7 +635,7 @@
     $('auth-form').addEventListener('submit',async event=>{event.preventDefault();$('auth-error').textContent='Accesso in corso…';$('auth-submit').disabled=true;try{await CloudRegistro.signIn($('auth-email').value,$('auth-password').value);await enterSignedInAccount();$('auth-password').value='';}catch(error){$('auth-error').textContent=error.message;}finally{$('auth-submit').disabled=false;}});
     $('invite-form').addEventListener('submit',async event=>{event.preventDefault();$('invite-error').textContent='Attivazione in corso…';$('invite-submit').disabled=true;try{const password=$('invite-password').value;if(password.length<8||password!==$('invite-password-confirm').value)throw Error('Le password devono coincidere e contenere almeno 8 caratteri.');await CloudRegistro.completeInvite(password);await enterSignedInAccount();$('invite-form').reset();}catch(error){$('invite-error').textContent=error.message;}finally{$('invite-submit').disabled=false;}});
     $('account-sync').onclick=()=>syncCloudNow(true);$('account-restore').onclick=restoreCloudSnapshot;
-    $('account-company').onclick=()=>showWorkspacePicker(accountMemberships);$('account-platform-manage').onclick=openPlatformWorkspaces;$('auth-workspaces').onclick=openPlatformWorkspaces;$('account-manage').onclick=()=>openMemberManager();$('worker-save').onclick=saveWorkerConfiguration;$('platform-worker-url').value=CloudRegistro.currentWorkerUrl();$('platform-worker-save').onclick=()=>{try{CloudRegistro.configureWorker($('platform-worker-url').value);$('platform-error').textContent='Collegamento Worker salvato.';loadWorkspaceList();}catch(error){$('platform-error').textContent=error.message;}};$('workspace-create-form').addEventListener('submit',createCompany);$('member-invite-form').addEventListener('submit',submitMemberInvite);$('member-close').onclick=()=>$('member-modal').hidden=true;$('member-modal').onclick=event=>{if(event.target===$('member-modal'))$('member-modal').hidden=true;};
+    $('account-company').onclick=()=>showWorkspacePicker(accountMemberships);$('account-platform-manage').onclick=openPlatformWorkspaces;$('auth-workspaces').onclick=openPlatformWorkspaces;$('account-manage').onclick=()=>openMemberManager();$('workspace-create-form').addEventListener('submit',createCompany);$('member-invite-form').addEventListener('submit',submitMemberInvite);$('member-close').onclick=()=>$('member-modal').hidden=true;$('member-modal').onclick=event=>{if(event.target===$('member-modal'))$('member-modal').hidden=true;};
     document.querySelectorAll('[data-close-modal]').forEach(button=>button.onclick=()=>{if(button.dataset.closeModal==='platform-workspaces-modal'&&document.body.classList.contains('platform-only'))signOutAccount();else $(button.dataset.closeModal).hidden=true;});$('company-picker-modal').onclick=event=>{if(event.target===$('company-picker-modal'))$('company-picker-modal').hidden=true;};$('platform-workspaces-modal').onclick=event=>{if(event.target===$('platform-workspaces-modal')){if(document.body.classList.contains('platform-only'))signOutAccount();else $('platform-workspaces-modal').hidden=true;}};
     $('platform-workspaces-list').addEventListener('click',event=>{const button=event.target.closest('button');if(button?.dataset.workspaceId){$('platform-workspaces-modal').hidden=true;openMemberManager(button.dataset.workspaceId);}});
     $('account-photo-cloud').onclick=()=>{$('photo-worker-url').value=CloudRegistro.currentWorkerUrl();$('photo-worker-error').textContent='';$('photo-cloud-modal').hidden=false;};$('photo-worker-save').onclick=connectPhotoWorker;$('photo-cloud-close').onclick=()=>$('photo-cloud-modal').hidden=true;$('photo-cloud-modal').onclick=event=>{if(event.target===$('photo-cloud-modal'))$('photo-cloud-modal').hidden=true;};

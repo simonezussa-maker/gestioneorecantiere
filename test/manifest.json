@@ -1,0 +1,15 @@
+{
+  "id": "./index.html?app=test",
+  "name": "Registro Ore Cantieri TEST",
+  "short_name": "Registro TEST",
+  "description": "Versione di prova con account e archivio condiviso",
+  "start_url": "./index.html?app=test",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#1976d2",
+  "icons": [
+    {"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}

@@ -11,3 +11,5 @@ Questa versione include ottimizzazioni avanzate per iOS:
 - Scorrimento inerziale fluido (momentum scrolling).
 - Gestione corretta delle aree di sicurezza (Notch / Dynamic Island e barra inferiore di iOS).
 - Transizioni fluide e accelerate via GPU.
+- L'accesso richiede un account invitato; per il primo accesso serve una connessione Internet.
+- L'editor Quadri usa lo schermo intero e rispetta le aree di sicurezza iPhone; resta da provare su Safari/iPhone reale.

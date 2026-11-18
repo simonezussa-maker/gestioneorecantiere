@@ -1,11 +1,19 @@
-const CACHE = 'registro-ore-pwa-android-compat-v6';
-const FILES = ['./', './index.html', './app.css?v=4', './app.js?v=4', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+const CACHE = 'registro-ore-pwa-local-main-v1';
+const OWNED_CACHE_PREFIX = 'registro-ore-pwa-local-main-';
+const FILES = ['./', './index.html', './app.css?v=16', './local-mode.js?v=1', './app.js?v=20', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)).then(() => self.skipWaiting())));
-self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim())));
+self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith(OWNED_CACHE_PREFIX) && key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim())));
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET' || new URL(event.request.url).origin !== self.location.origin) return;
-  event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
-    if (response.ok) { const copy = response.clone(); caches.open(CACHE).then(cache => cache.put(event.request, copy)); }
-    return response;
-  }).catch(() => caches.match('./index.html'))));
+  event.respondWith(caches.open(CACHE).then(async cache => {
+    const cached = await cache.match(event.request);
+    if (cached) return cached;
+    try {
+      const response = await fetch(event.request);
+      if (response.ok) await cache.put(event.request, response.clone());
+      return response;
+    } catch (_) {
+      return await cache.match('./index.html');
+    }
+  }));
 });

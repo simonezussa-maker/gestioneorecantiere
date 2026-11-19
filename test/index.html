@@ -34,6 +34,7 @@
       <label class="field-label" for="invite-password">Nuova password</label><input id="invite-password" type="password" autocomplete="new-password" minlength="8" required>
       <label class="field-label" for="invite-password-confirm">Ripeti la password</label><input id="invite-password-confirm" type="password" autocomplete="new-password" minlength="8" required>
       <button class="button primary wide" id="invite-submit" type="submit">Attiva account</button>
+      <button class="auth-link" id="invite-cancel" type="button">Torna all’accesso</button>
       <p id="invite-error" class="auth-error" role="status" aria-live="polite"></p>
     </form>
   </section>
@@ -205,7 +206,7 @@
 </section>
   <section id="photo-cloud-modal" class="photo-modal" hidden aria-labelledby="photo-cloud-title" role="dialog" aria-modal="true"><div class="photo-dialog"><div class="row-between"><h2 id="photo-cloud-title">Foto condivise</h2><button id="photo-cloud-close" class="mini-button" aria-label="Chiudi">✕</button></div><p class="hint">Inserisci l’indirizzo pubblico del Worker fornito per il gruppo. Le foto restano nel bucket privato; l’indirizzo non è una chiave segreta.</p><label class="field-label" for="photo-worker-url">URL Worker</label><input id="photo-worker-url" type="url" inputmode="url" placeholder="https://nome-worker.nome-account.workers.dev"><button class="button primary wide" id="photo-worker-save">Collega foto</button><p id="photo-worker-error" class="auth-error" role="status" aria-live="polite"></p></div></section>
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="cloud.js?v=9" defer></script>
-  <script src="app.js?v=21" defer></script>
+  <script src="cloud.js?v=10" defer></script>
+  <script src="app.js?v=22" defer></script>
 </body>
 </html>

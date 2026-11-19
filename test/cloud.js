@@ -78,7 +78,7 @@
     return workerUrl;
   }
   function currentWorkerUrl() { return workerUrl; }
-  function storeAuthResult(data) {
+  function storeAuthResult(data, preserveAuthSetup = false) {
     const expiresIn = Number(data.expires_in) || 3600;
     const value = {
       access_token: data.access_token,
@@ -87,6 +87,9 @@
       user: data.user
     };
     if (!value.access_token || !value.refresh_token || !value.user?.id) throw Error('Risposta di accesso incompleta.');
+    if (preserveAuthSetup && session?.pending_auth_type && session.user?.id === value.user.id) {
+      value.pending_auth_type = session.pending_auth_type;
+    }
     persist(value);
     return value;
   }
@@ -95,7 +98,7 @@
     if (session.expires_at > Math.floor(Date.now() / 1000) + 90) return session;
     try {
       const data = await authRequest('token?grant_type=refresh_token', { refresh_token: session.refresh_token });
-      return storeAuthResult(data);
+      return storeAuthResult(data, true);
     } catch (error) {
       persist(null);
       throw Error(`Sessione scaduta. Accedi di nuovo. (${error.message})`);
@@ -117,8 +120,22 @@
     const hash = new URLSearchParams((location.hash || '').replace(/^#/, ''));
     const type = hash.get('type');
     const accessToken = hash.get('access_token');
-    if (!accessToken || !['invite', 'recovery'].includes(type)) return null;
+    if (hash.get('error') || hash.get('error_code')) {
+      history.replaceState(null, '', `${location.pathname}${location.search}`);
+      throw Error('Il link di invito o recupero password è scaduto o non valido. Richiedi una nuova email.');
+    }
+    if (!accessToken) {
+      let saved;
+      try { saved = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch { return null; }
+      if (['invite', 'recovery'].includes(saved?.pending_auth_type)) {
+        const restored = await restoreSession();
+        if (restored) return { type: restored.pending_auth_type, email: restored.user.email || '' };
+      }
+      return null;
+    }
+    if (!['invite', 'recovery'].includes(type)) return null;
     session = {
+      pending_auth_type: type,
       access_token: accessToken,
       refresh_token: hash.get('refresh_token') || '',
       expires_at: Number(hash.get('expires_at')) || Math.floor(Date.now() / 1000) + (Number(hash.get('expires_in')) || 3600),
@@ -137,9 +154,11 @@
     if (!session?.access_token) throw Error('Il link di invito non è valido.');
     const user = await api('/auth/v1/user', { method: 'PUT', body: JSON.stringify({ password }) });
     session.user = user;
+    delete session.pending_auth_type;
     persist(session);
     return user;
   }
+  function cancelAuthSetup() { persist(null); }
   async function restoreSession() {
     try {
       const saved = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
@@ -411,7 +430,7 @@
   }
   function currentWorkspaceDocumentUpdatedAt() { return workspaceDocumentUpdatedAt; }
   globalThis.CloudRegistro = {
-    signIn, requestPasswordReset, consumeAuthLink, completeInvite, restoreSession, signOut, memberships, isPlatformMaster, createWorkspace, listWorkspaces, loadWorkspace, syncWorkspace, deleteOwnReport,
+    signIn, requestPasswordReset, consumeAuthLink, completeInvite, cancelAuthSetup, restoreSession, signOut, memberships, isPlatformMaster, createWorkspace, listWorkspaces, loadWorkspace, syncWorkspace, deleteOwnReport,
     configureWorker, currentWorkerUrl, listMembers, inviteMember, updateMember, listPhotos, fetchPhoto, uploadPhoto, deletePhoto,
     loadWorkspaceForMembership, currentSession, currentUserId, currentUserEmail,
     currentWorkspaceDocumentUpdatedAt

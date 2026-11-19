@@ -229,12 +229,26 @@
   async function connectPhotoWorker(){try{CloudRegistro.configureWorker($('photo-worker-url').value);$('photo-worker-error').textContent='Collegamento salvato su questo dispositivo. Premi Sincronizza per caricare le foto locali autorizzate.';cloudPhotoMetadataWorkspace='';await loadCloudPhotoMetadata();renderPhotos();notify('Collegamento foto salvato.');}catch(error){$('photo-worker-error').textContent=error.message;}}
   async function submitMemberInvite(event){
     event.preventDefault();const button=$('member-invite-submit');button.disabled=true;$('member-error').textContent='Invio invito…';
-    try{if(!memberManageWorkspaceId)throw Error('Seleziona un’azienda da gestire.');await CloudRegistro.inviteMember(memberManageWorkspaceId,{email:$('member-email').value.trim(),displayName:$('member-name').value.trim(),permissions:permissionValues($('invite-permissions'))});$('member-invite-form').reset();addPermissionInputs($('invite-permissions'),{},platformMaster||Boolean(cloudMembership?.is_admin||cloudMembership?.is_titular));$('member-error').textContent='Invito inviato. Il collega riceverà un’email con il link di attivazione.';await loadMemberList();}
+    try{
+      if(!memberManageWorkspaceId)throw Error('Seleziona un’azienda da gestire.');
+      const result=await CloudRegistro.inviteMember(memberManageWorkspaceId,{
+        email:$('member-email').value.trim(),
+        displayName:$('member-name').value.trim(),
+        permissions:permissionValues($('invite-permissions'))
+      });
+      $('member-invite-form').reset();
+      addPermissionInputs($('invite-permissions'),{},platformMaster||Boolean(cloudMembership?.is_admin||cloudMembership?.is_titular));
+      await loadMemberList();
+      $('member-error').textContent=result.mode==='existing_user_linked'
+        ?'Account esistente collegato al gruppo. Il collega può già accedere.'
+        :'Invito inviato. Il collega riceverà un’email con il link di attivazione.';
+    }
     catch(error){$('member-error').textContent=error.message;}
     finally{button.disabled=false;}
   }
-  async function showAccountLogin(message=''){
+  async function showAccountLogin(message='',restore=true){
     $('auth-screen').hidden=false;$('auth-form').hidden=false;$('invite-form').hidden=true;$('auth-error').classList.remove('auth-success');$('auth-error').textContent=message;$('account-bar').hidden=true;
+    if(!restore)return;
     const session=await CloudRegistro.restoreSession();
     if(session){try{await enterSignedInAccount();}catch(error){$('auth-error').textContent=error.message;}}
   }
@@ -678,6 +692,7 @@
     $('auth-form').addEventListener('submit',async event=>{event.preventDefault();$('auth-error').classList.remove('auth-success');$('auth-error').textContent='Accesso in corso…';$('auth-submit').disabled=true;try{await CloudRegistro.signIn($('auth-email').value,$('auth-password').value);await enterSignedInAccount();$('auth-password').value='';}catch(error){$('auth-error').textContent=error.message;}finally{$('auth-submit').disabled=false;}});$('auth-forgot').onclick=requestAccountPasswordReset;
     $('invite-form').addEventListener('submit',async event=>{event.preventDefault();const recovery=$('invite-form').dataset.mode==='recovery';$('invite-error').textContent=recovery?'Aggiornamento password…':'Attivazione in corso…';$('invite-submit').disabled=true;try{const password=$('invite-password').value;if(password.length<8||password!==$('invite-password-confirm').value)throw Error('Le password devono coincidere e contenere almeno 8 caratteri.');await CloudRegistro.completeInvite(password);await enterSignedInAccount();$('invite-form').reset();}catch(error){$('invite-error').textContent=error.message;}finally{$('invite-submit').disabled=false;}});
     $('account-sync').onclick=()=>syncCloudNow(true);$('account-restore').onclick=restoreCloudSnapshot;
+    $('invite-cancel').onclick=()=>{CloudRegistro.cancelAuthSetup();$('invite-form').reset();showAccountLogin('',false);};
     $('account-company').onclick=()=>showWorkspacePicker(accountMemberships);$('account-platform-manage').onclick=openPlatformWorkspaces;$('auth-workspaces').onclick=openPlatformWorkspaces;$('account-manage').onclick=()=>openMemberManager();$('workspace-create-form').addEventListener('submit',createCompany);$('member-invite-form').addEventListener('submit',submitMemberInvite);$('member-close').onclick=()=>$('member-modal').hidden=true;$('member-modal').onclick=event=>{if(event.target===$('member-modal'))$('member-modal').hidden=true;};
     document.querySelectorAll('[data-close-modal]').forEach(button=>button.onclick=()=>{if(button.dataset.closeModal==='platform-workspaces-modal'&&document.body.classList.contains('platform-only'))signOutAccount();else $(button.dataset.closeModal).hidden=true;});$('company-picker-modal').onclick=event=>{if(event.target===$('company-picker-modal'))$('company-picker-modal').hidden=true;};$('platform-workspaces-modal').onclick=event=>{if(event.target===$('platform-workspaces-modal')){if(document.body.classList.contains('platform-only'))signOutAccount();else $('platform-workspaces-modal').hidden=true;}};
     $('platform-workspaces-list').addEventListener('click',event=>{const button=event.target.closest('button');if(button?.dataset.workspaceId){$('platform-workspaces-modal').hidden=true;openMemberManager(button.dataset.workspaceId);}});
@@ -710,6 +725,6 @@
     $('conversion-kind').onchange=updateConversion;$('conversion-forward').onclick=()=>{conversionReverse=false;setChipPair('conversion-forward','conversion-reverse',true);$('conversion-value').value=conversionDefaults[$('conversion-kind').value][0];updateConversionInputLabel();clearResult('conversion-result');};$('conversion-reverse').onclick=()=>{conversionReverse=true;setChipPair('conversion-forward','conversion-reverse',false);$('conversion-value').value=conversionDefaults[$('conversion-kind').value][1];updateConversionInputLabel();clearResult('conversion-result');};$('conversion-value').oninput=()=>clearResult('conversion-result');$('convert-value').onclick=convertValue;updateConversion();$('pinout-kind').onchange=renderPinout;
     $('photo-input').onchange=e=>addPhotos(Array.from(e.target.files||[]));
   }
-  async function start(){bind();await loadDb();hours=remainingHoursForDate();updateHours();renderAll();window.addEventListener('online',()=>{if(cloudMembership?.status==='active')syncCloudNow(false);});try{const invite=await CloudRegistro.consumeAuthLink();if(invite)showInviteSetup(invite.email,invite.type);else await showAccountLogin();}catch(error){await showAccountLogin(error.message);}if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(error=>console.warn('Service worker non disponibile',error));}
+  async function start(){bind();await loadDb();hours=remainingHoursForDate();updateHours();renderAll();window.addEventListener('online',()=>{if(cloudMembership?.status==='active')syncCloudNow(false);});try{const invite=await CloudRegistro.consumeAuthLink();if(invite)showInviteSetup(invite.email,invite.type);else await showAccountLogin();}catch(error){await showAccountLogin(error.message,false);}if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(error=>console.warn('Service worker non disponibile',error));}
   start();
 })();

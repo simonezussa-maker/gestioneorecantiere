@@ -13,6 +13,6 @@ Il test usa lo stesso progetto Supabase e il gruppo assegnato all’account, ma 
 
 Il 19 novembre 2026 sono stati aggiornati l’indirizzo principale Supabase, gli URL di ritorno consentiti e la funzione `manage-members` per aprire inviti e recupero password su `https://simonezussa-maker.github.io/gestioneorecantiere/test/`. Usa le nuove email generate dopo questo aggiornamento per le prove di attivazione.
 
-Questa revisione usa `app.js?v=22`, `cloud.js?v=10` e cache `registro-ore-pwa-test-v3`. Comprende il conteggio degli straordinari per autore, mantiene il modulo di impostazione password anche dopo una ricarica e distingue il collegamento di un account esistente dall’invio di una nuova email. I link scaduti mostrano un messaggio per richiedere una nuova email.
+Questa revisione usa `app.js?v=23`, `cloud.js?v=10` e cache `registro-ore-pwa-test-v4`. I rapportini distinguono cliente, cantiere, interno e autore. Il pulsante «Solo spese» azzera le ore per registrare un anticipo. L’importo deve essere positivo quando le ore sono zero.
 
 I backup JSON sono portabili e comprendono le foto presenti localmente. La PWA TEST e quella personale non condividono il database del browser.

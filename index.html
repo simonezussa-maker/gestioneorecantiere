@@ -35,7 +35,10 @@
         <div class="quick-hours"><button data-hours="1">1 h</button><button data-hours="2">2 h</button><button data-hours="4">4 h</button><button data-hours="8">8 h</button><button data-hours="8.5">8,5 h</button></div>
         <p class="hint">Puoi impostare le ore predefinite e la tariffa straordinaria da Impostazioni.</p>
       </article>
-      <div id="expenses-field"><label class="field-label" for="expenses">Spese anticipate (€)</label><input id="expenses" type="number" inputmode="decimal" min="0" step="0.01" value="0"></div>
+      <div id="expenses-field">
+        <div class="row-between"><label class="field-label" for="expenses">Spese anticipate (€)</label><button type="button" class="mini-button" id="expense-only">Solo spese</button></div>
+        <input id="expenses" type="number" inputmode="decimal" min="0" step="0.01" value="0">
+      </div>
       <label class="field-label" for="notes">Note di cantiere</label><textarea id="notes" rows="2" maxlength="2000" placeholder="Aggiungi una nota…"></textarea>
       <button class="button primary wide save-report" id="save-report">Registra rapportino</button>
     </section>
@@ -148,6 +151,6 @@
   <section id="material-detail-modal" class="photo-modal" hidden aria-labelledby="material-detail-title" role="dialog" aria-modal="true"><div class="photo-dialog"><div class="row-between"><h2 id="material-detail-title">Dettagli articolo</h2><button id="material-detail-close" class="mini-button" aria-label="Chiudi dettagli articolo">✕</button></div><p class="hint" id="material-detail-hint"></p><div id="material-detail-color-field"><label class="field-label" for="material-detail-color">Colore</label><select id="material-detail-color"></select></div><div id="material-detail-brand-fields"><label class="field-label" for="material-detail-brand">Marca</label><input id="material-detail-brand" maxlength="100" list="material-brand-options"><datalist id="material-brand-options"></datalist><label class="field-label" for="material-detail-series">Serie</label><input id="material-detail-series" maxlength="100" list="material-series-options"><datalist id="material-series-options"></datalist></div><div class="action-row"><button class="button secondary" id="material-detail-cancel" type="button">Annulla</button><button class="button primary" id="material-detail-save" type="button">Salva</button></div></div></section>
 <div id="toast" role="status" aria-live="polite"></div>
   <script src="local-mode.js?v=1" defer></script>
-  <script src="app.js?v=20" defer></script>
+  <script src="app.js?v=21" defer></script>
 </body>
 </html>

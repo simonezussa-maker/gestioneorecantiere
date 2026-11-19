@@ -354,7 +354,14 @@
   function isHoliday(date){const [d,m,y]=dateParts(date);const day=new Date(y,m-1,d).getDay();if(day===0||day===6)return true;if([[1,1],[6,1],[25,4],[1,5],[2,6],[15,8],[1,11],[8,12],[25,12],[26,12]].some(([a,b])=>a===d&&b===m))return true;const easter=easterSunday(y);return (d===easter.getDate()&&m===easter.getMonth()+1)||(d===easter.getDate()+1&&m===easter.getMonth()+1)||(easter.getDate()+1>new Date(y,easter.getMonth()+1,0).getDate()&&d===1&&m===easter.getMonth()+2);}
   function easterSunday(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,n=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*n+114)/31)-1,da=((h+l-7*n+114)%31)+1;return new Date(y,mo,da);}
   function distribution(dayReports){let remaining=8;const festive=dayReports[0]?isHoliday(dayReports[0].data):false;return new Map(dayReports.map(r=>{if(r.tipologia!=='LAVORO')return[r.id,[r.ore,0]];if(festive)return[r.id,[0,r.ore]];if(remaining<=0)return[r.id,[0,r.ore]];const ordinary=Math.min(remaining,r.ore);remaining-=ordinary;return[r.id,[ordinary,r.ore-ordinary]];}));}
-  function distributionAll(){const map=new Map();const groups=groupBy(db.rapportini,r=>r.data);for(const rows of groups.values())for(const [id,pair]of distribution(rows))map.set(id,pair);return map;}
+  function distributionAll(){
+    const result=new Map(),currentUserId=CloudRegistro.currentUserId()||'local';
+    const groups=groupBy(db.rapportini,report=>JSON.stringify([report.data,report.owner_user_id||currentUserId]));
+    for(const rows of groups.values()){
+      for(const [id,hours]of distribution(rows))result.set(id,hours);
+    }
+    return result;
+  }
   function groupBy(items,keyFn){const map=new Map();for(const item of items){const key=keyFn(item);if(!map.has(key))map.set(key,[]);map.get(key).push(item);}return map;}
   function renderAll(){renderSelects();renderFrequent();renderCustomers();renderBoard();renderPhotos();renderShoppingList();renderPanelSites();renderPanelBoard();renderPanelLibrary();renderPinout();refreshUndoButton();}
   function fillSelect(select,items,placeholder,selected=''){select.replaceChildren();const first=el('option','',placeholder);first.value='';select.append(first);for(const item of items){const opt=el('option','',item.nome);opt.value=item.id;select.append(opt);}select.value=items.some(i=>i.id===selected)?selected:'';}

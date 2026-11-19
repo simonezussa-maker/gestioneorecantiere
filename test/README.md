@@ -11,6 +11,8 @@ Questa cartella contiene la versione di prova con login, permessi, sincronizzazi
 
 Il test usa lo stesso progetto Supabase e il gruppo assegnato all’account, ma ha database locale, chiavi sessione, impostazione Worker e cache service worker separate dal link principale. Inserisci il login del gruppo di prova. Il Worker foto è preimpostato.
 
-Per i nuovi inviti o i link di recupero password, Supabase potrebbe richiedere che il percorso `/gestioneorecantiere/test/` sia consentito tra i redirect URL. Il login con un account già attivo non richiede questa modifica.
+Il recupero password richiede che `https://simonezussa-maker.github.io/gestioneorecantiere/test/` sia consentito tra i redirect URL Supabase. La funzione `manage-members` indirizza ancora i nuovi inviti al percorso principale. Prima di provare inviti a nuovi account, occorre aggiornare anche quel redirect a `/test/` e pubblicare la funzione. Il login con gli account già attivi è stato verificato.
+
+Questa revisione usa `app.js?v=21` e cache `registro-ore-pwa-test-v2`. Corregge il calcolo degli straordinari nel registro del gruppo, applicando le otto ore ordinarie separatamente a ogni autore.
 
 I backup JSON sono portabili e comprendono le foto presenti localmente. La PWA TEST e quella personale non condividono il database del browser.

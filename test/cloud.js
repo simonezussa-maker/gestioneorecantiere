@@ -430,6 +430,7 @@
   }
   function currentWorkspaceDocumentUpdatedAt() { return workspaceDocumentUpdatedAt; }
   globalThis.CloudRegistro = {
+    siteWork: (workspace, args) => api('/rest/v1/rpc/site_work', {method:'POST', body:JSON.stringify({...args,p_workspace:workspace})}),
     signIn, requestPasswordReset, consumeAuthLink, completeInvite, cancelAuthSetup, restoreSession, signOut, memberships, isPlatformMaster, createWorkspace, listWorkspaces, loadWorkspace, syncWorkspace, deleteOwnReport,
     configureWorker, currentWorkerUrl, listMembers, inviteMember, updateMember, listPhotos, fetchPhoto, uploadPhoto, deletePhoto,
     loadWorkspaceForMembership, currentSession, currentUserId, currentUserEmail,

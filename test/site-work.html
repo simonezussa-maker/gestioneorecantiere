@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Avanzamento cantiere · Registro Ore</title><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<style>
+:root{color-scheme:light dark;--bg:#f4f5fb;--surface:#fff;--surface2:#eeeff8;--line:#c9ccdb;--text:#1b2034;--muted:#535c73;--primary:#384e91;--fill:#e1e7ff;--done:#166947;--done-bg:#dcf4e9;--danger:#a22d33;font:16px/1.45 "Segoe UI",system-ui,sans-serif}
+@media(prefers-color-scheme:dark){:root{--bg:#12141e;--surface:#202330;--surface2:#2a2e40;--line:#484e65;--text:#eceefa;--muted:#bbc2d8;--primary:#bac7ff;--fill:#343e61;--done:#94e1bb;--done-bg:#204939;--danger:#ffb3af}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text)}main{max-width:1040px;margin:auto;padding:18px clamp(12px,3vw,32px) max(30px,env(safe-area-inset-bottom))}
+header{background:var(--surface);border-bottom:1px solid var(--line)}header div{max-width:1040px;margin:auto;padding:13px clamp(12px,3vw,32px);display:flex;justify-content:space-between;align-items:center}header strong{font-size:.94rem}header small{color:var(--muted)}
+h1{font-size:clamp(1.6rem,4.3vw,2.55rem);line-height:1.1;margin:8px 0 18px;letter-spacing:-.035em}h2{font-size:1.12rem;margin:0}h3{font-size:1rem;margin:0}p{margin:4px 0}button,select,input{font:inherit;color:var(--text)}button,select,input[type=text]{border:1px solid var(--line);border-radius:10px;min-height:44px;background:var(--surface);padding:7px 12px}button{cursor:pointer}button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible,.scroll:focus-visible{outline:3px solid var(--primary);outline-offset:2px}button:disabled{cursor:default;color:var(--muted)}button.main{background:var(--fill);color:var(--primary);border-color:var(--primary);font-weight:650}label{font-size:.85rem;font-weight:600;color:var(--muted)}label select,label input{display:block;width:100%;margin-top:4px;font-weight:450}input{min-width:0}
+.selects{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:12px;margin-bottom:14px}.card{border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:clamp(12px,2vw,22px);margin:12px 0}.counts,.tools,.tabs,.actions,.manageRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.counts{justify-content:space-between;margin-bottom:10px}.counts output,.sub{color:var(--muted);font-size:.87rem}progress{width:100%;height:9px;display:block;accent-color:var(--done)}.tabs{gap:0;background:var(--surface2);border:1px solid var(--line);border-radius:12px;display:inline-flex;padding:3px}.tabs button{background:transparent;border:0;color:var(--muted);min-height:38px;padding-inline:11px}.tabs button[aria-pressed=true]{background:var(--surface);box-shadow:0 1px 4px #0002;color:var(--primary);font-weight:650}.tools{justify-content:space-between;margin-bottom:12px}.filter{display:flex;align-items:center;gap:6px;min-height:44px;cursor:pointer}.filter input{accent-color:var(--primary);width:18px;height:18px;margin:0}.scroll{overflow:auto;max-height:65vh;border:1px solid var(--line);border-radius:10px}.scroll:focus-within{scrollbar-color:var(--line) var(--surface2)}
+.scroll{isolation:isolate}
+table{border-collapse:separate;border-spacing:0;width:100%;table-layout:auto}
+th,td{border-bottom:1px solid var(--line);text-align:center;padding:3px;background:var(--surface)}
+tr:last-child td,tr:last-child th[scope=row]{border-bottom:0}
+th[scope=col]{position:sticky;top:0;z-index:2;background:var(--surface2);font-size:.78rem;height:42px;min-width:56px}
+th:first-child{position:sticky;left:0;text-align:left;width:clamp(120px,23vw,210px);min-width:clamp(120px,23vw,210px);max-width:clamp(120px,23vw,210px);border-right:1px solid var(--line);padding:8px 10px;overflow-wrap:anywhere}
+th[scope=row]{z-index:1;font-size:.9rem;font-weight:600}
+th[scope=col]:first-child{z-index:3}
+.tick{position:relative;min-width:44px;min-height:44px;border:0;display:inline-grid;place-items:center;background:transparent;padding:0}.tick span,.staticTick span{display:grid;place-items:center;width:26px;height:26px;border:1.5px solid var(--line);border-radius:7px;font-weight:750}.tick[aria-pressed=true] span,.staticTick.done span{background:var(--done-bg);color:var(--done);border-color:var(--done)}.staticTick{min-width:44px;min-height:44px;display:inline-grid;place-items:center}.unitRow{display:flex;justify-content:space-between;align-items:center;padding:5px 2px;border-bottom:1px solid var(--line);gap:10px}.unitRow:last-child{border:0}.unitRow strong{font-size:.95rem;font-weight:600;overflow-wrap:anywhere}.unitHead{display:flex;flex-wrap:wrap;gap:8px;align-items:end;justify-content:space-between;margin:8px 0}.unitHead label{min-width:165px}.unitHead small{color:var(--muted)}summary{cursor:pointer;color:var(--primary);font-weight:650;min-height:34px;padding:4px}.edit form{margin:10px 0}.actions{align-items:end}.actions label,.manageRow input{flex:1}.manageRow{padding:8px 0;border-top:1px solid var(--line)}.manageRow input{min-width:100px}.danger{color:var(--danger);font-size:.87rem}.hint{color:var(--muted);font-size:.85rem;margin-top:8px}.status{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--surface);border-radius:10px;max-width:90%;padding:9px 14px;z-index:4}.status:empty{display:none}[hidden]{display:none!important}
+dialog{width:min(380px,92%);border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--text);padding:18px}dialog::backdrop{background:#10142988}dialog label{display:block;margin:12px 0}input[type=number]{font:inherit;border:1px solid var(--line);border-radius:10px;min-height:44px;background:var(--surface);padding:7px 12px}
+@media(max-width:520px){.selects{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:8px}.selects select{padding-inline:5px}.card{padding:11px}.tools{gap:3px}.tabs button{padding-inline:9px}h1{margin-top:3px}.manageRow{display:grid;grid-template-columns:1fr auto auto;gap:4px}.manageRow input{width:100%}.manageRow button{padding-inline:7px}}
+</style>
+<style>
+.wideGrid{--task-col:clamp(120px,23vw,210px);table-layout:fixed}
+.wideGrid .gap{padding:0;border:0;min-width:0;pointer-events:none}
+.wideGrid th[scope=col]{white-space:nowrap}
+.jump{display:flex;align-items:end;gap:8px;margin:8px 0 12px}
+.jump input{width:8em}
+#previewHelp h2{margin-bottom:6px}
+#previewHelp .scroll{margin-top:12px}
+#previewHelp td{padding:0}
+#previewHelp td label{min-height:44px;display:grid;place-items:center;cursor:pointer}
+#previewHelp input{width:22px;height:22px;accent-color:var(--done)}
+</style>
+</head>
+<body>
+<main><button id="exit">‹ Indietro</button><h1>Avanzamento cantiere</h1>
+<label>Cantiere<select id="site"></select></label><p id="message" role="status"></p>
+<button id="reload">Aggiorna</button><div id="interactive" hidden>
+  <section class="card" aria-label="Avanzamento complessivo"><div class="counts"><h2 id="siteName"></h2><output id="count"></output></div><progress id="progress" value="0" max="1" aria-label="Lavori completati"></progress></section>
+  <section class="card" aria-label="Lavorazioni">
+    <div class="tools"><div class="tabs" aria-label="Vista"><button id="gridMode">Tabella</button><button id="unitMode">Per interno</button></div><label class="filter"><input id="pending" type="checkbox"><span id="pendingLabel">Solo righe da finire</span></label></div>
+    <div id="unitHead" class="unitHead" hidden><label>Interno<select id="unit"></select></label><small id="unitCount"></small></div>
+    <form id="jumpForm" class="jump" hidden><label>Vai all’interno<input id="jumpUnit" type="number" inputmode="numeric" min="1" step="1" required></label><button type="submit">Vai</button></form>
+    <div id="board"></div><p id="scrollHint" class="hint" hidden>Scorri a destra per gli altri interni.</p>
+  </section>
+  <details id="edit" class="card edit"><summary>Gestisci lavorazioni</summary>
+    <form id="addForm" class="actions"><label>Nuova lavorazione<input id="newTask" type="text" maxlength="90" placeholder="Es. Posa citofono" required></label><button class="main" type="submit">Aggiungi</button></form>
+    <div id="editRows"></div>
+  </details>
+</div></main><div id="status" class="status" role="status"></div><script>
+'use strict';
+const $=id=>document.getElementById(id);
+const elem=(tag,txt)=>{const n=document.createElement(tag);if(txt!==undefined)n.textContent=txt;return n;};
+const option=(id,name)=>new Option(name,id);
+let sites=[],active=null,dataStore=new Map(),busy=false,rpc,leave,rows=[],manage=false,check=false;
+const site=()=>active;
+const canEdit=()=>manage&&!busy;
+const canCheck=()=>check&&!busy;
+const taskKey=id=>'task/'+id;
+const cellKey=(row,col)=>row+'/'+col;
+const tasks=()=>rows;
+function checked(data,t,u){return data.has(cellKey(t.id,u.id));}
+let mode='grid',timer;
+function say(msg){$('status').textContent=msg;clearTimeout(timer);timer=setTimeout(()=>$('status').textContent='',2300);}
+function mark(data,t,u){
+  const on=checked(data,t,u), editable=canCheck();
+  const node=elem(editable?'button':'span'),text=on?'Fatto':'Da fare';
+  node.className=editable?'tick':'staticTick'+(on?' done':'');
+  node.dataset.row=t.id;node.dataset.col=u.id;
+  node.title=t.name+' · '+u.name+' · '+text;
+  node.setAttribute('aria-label',t.name+' · '+u.name+(editable?'':' · '+text));
+  if(editable){
+    node.setAttribute('aria-pressed',String(on));
+    node.onclick=()=>{
+      if(!canCheck()||!dataStore.get(taskKey(t.id)))return;
+      run('check',{p_task:t.id,p_unit:u.id,p_done:!on});
+    };
+  }else node.setAttribute('role','img');
+  const symbol=elem('span',on?'✓':'');symbol.setAttribute('aria-hidden','true');node.append(symbol);return node;
+}
+function updateHint(){
+  const el=$('board').querySelector('.scroll');
+  const horizontal=el&&el.scrollWidth>el.clientWidth+1, vertical=el&&el.scrollHeight>el.clientHeight+1;
+  $('scrollHint').hidden=!horizontal&&!vertical;
+  $('scrollHint').textContent=horizontal&&vertical?'Scorri di lato per gli interni e in verticale per le lavorazioni.':horizontal?'Scorri di lato per gli altri interni.':'Scorri in verticale per le altre lavorazioni.';
+}
+const unitWidth=68;
+let refreshGridWindow;
+function renderWideGrid(board,rows,units,data,x,y){
+  const scroll=elem('div'),table=elem('table');
+  scroll.className='scroll';scroll.tabIndex=0;scroll.setAttribute('role','region');
+  scroll.setAttribute('aria-label','Tabella scorrevole delle lavorazioni');
+  table.className='wideGrid';table.setAttribute('aria-label','Lavorazioni per interno');
+  table.setAttribute('aria-colcount',units.length+1);
+  table.style.width='calc(var(--task-col) + '+units.length*unitWidth+'px)';
+  scroll.append(table);board.append(scroll);
+  let start=-1,end=-1,frame=0;
+  function draw(offset){
+    const first=Math.max(0,Math.floor(offset/unitWidth));
+    const last=Math.min(units.length,first+Math.ceil(scroll.clientWidth/unitWidth)+1);
+    if(start>=0&&first>=start&&last<=end)return;
+    start=Math.max(0,first-5);end=Math.min(units.length,last+5);
+    const fragment=document.createDocumentFragment(),cols=elem('colgroup');
+    const column=width=>{const col=elem('col');col.style.width=width;cols.append(col);};
+    column('var(--task-col)');
+    if(start>0)column(start*unitWidth+'px');
+    for(let i=start;i<end;i++)column(unitWidth+'px');
+    if(end<units.length)column((units.length-end)*unitWidth+'px');
+    function gap(row){const cell=elem('td');cell.className='gap';cell.setAttribute('aria-hidden','true');row.append(cell);}
+    function addCells(row,create){
+      if(start>0)gap(row);
+      for(let i=start;i<end;i++){const cell=create(units[i]);cell.setAttribute('aria-colindex',i+2);row.append(cell);}
+      if(end<units.length)gap(row);
+    }
+    const head=elem('thead'),heading=head.insertRow(),corner=elem('th','Lavorazione');
+    corner.scope='col';corner.setAttribute('aria-colindex','1');heading.append(corner);
+    addCells(heading,u=>{const h=elem('th',u.name);h.scope='col';return h;});
+    const body=elem('tbody');
+    for(const task of rows){
+      const row=body.insertRow(),name=elem('th',task.name);name.scope='row';name.setAttribute('aria-colindex','1');row.append(name);
+      addCells(row,u=>{const cell=elem('td');cell.append(mark(data,task,u));return cell;});
+    }
+    fragment.append(cols,head,body);table.replaceChildren(fragment);
+  }
+  refreshGridWindow=()=>draw(scroll.scrollLeft);
+  draw(x);scroll.scrollLeft=x;scroll.scrollTop=y;
+  scroll.addEventListener('scroll',()=>{
+    if(!frame)frame=requestAnimationFrame(()=>{frame=0;if(scroll.isConnected)draw(scroll.scrollLeft);});
+  },{passive:true});
+}
+function renderBoard(){
+  refreshGridWindow=null;
+  const data=dataStore, rows=tasks(data),s=site(),units=s.units;
+  const current=units.find(u=>u.id===$('unit').value)||units[0];
+  const on=rows.reduce((sum,t)=>sum+units.filter(u=>checked(data,t,u)).length,0);
+  const total=rows.length*units.length, filter=$('pending').checked;
+  $('siteName').textContent=s.name;$('count').textContent=on+' di '+total+' completati';
+  $('progress').max=total||1;$('progress').value=on;
+  $('gridMode').setAttribute('aria-pressed',String(mode==='grid'));$('unitMode').setAttribute('aria-pressed',String(mode==='unit'));
+  $('unitHead').hidden=mode!=='unit';$('pendingLabel').textContent=mode==='unit'?'Solo da fare':'Solo righe da finire';
+  $('jumpForm').hidden=mode!=='grid'||units.length<=32||!rows.length;
+  $('jumpUnit').max=units.length;$('jumpUnit').placeholder='1–'+units.length;
+  const unitDone=rows.filter(t=>checked(data,t,current)).length;
+  $('unitCount').textContent=unitDone+' di '+rows.length+' completati';
+  const board=$('board'),old=board.querySelector('.scroll'),x=old?.scrollLeft||0,y=old?.scrollTop||0;
+  board.replaceChildren();
+  const visible=rows.filter(t=>!filter||(mode==='unit'?!checked(data,t,current):units.some(u=>!checked(data,t,u))));
+  if(!visible.length) board.append(elem('p',rows.length?'Tutte le lavorazioni sono completate.':'Nessuna lavorazione in questo cantiere.'));
+  else if(mode==='unit'){
+    for(const t of visible){const line=elem('div');line.className='unitRow';line.append(elem('strong',t.name),mark(data,t,current));board.append(line);}
+  }else if(units.length>32){
+    renderWideGrid(board,visible,units,data,x,y);
+  }else{
+    const scroll=elem('div');scroll.className='scroll';scroll.tabIndex=0;scroll.setAttribute('role','region');scroll.setAttribute('aria-label','Tabella scorrevole delle lavorazioni');
+    const table=elem('table');table.setAttribute('aria-label','Lavorazioni per interno');const head=table.createTHead().insertRow();
+    for(const label of ['Lavorazione',...units.map(u=>u.name)]){const h=elem('th',label);h.scope='col';head.append(h);}
+    const body=table.createTBody();
+    for(const t of visible){
+      const r=body.insertRow(),h=elem('th',t.name);h.scope='row';r.append(h);
+      for(const u of units)r.insertCell().append(mark(data,t,u));
+    }
+    scroll.append(table);board.append(scroll);scroll.scrollLeft=x;scroll.scrollTop=y;
+  }
+  $('edit').hidden=!canEdit();if(!canEdit())$('edit').open=false;updateHint();
+}
+function validName(input,id){
+  const name=input.value.trim();
+  const duplicate=tasks(dataStore).some(t=>t.id!==id&&t.name.toLocaleLowerCase('it')===name.toLocaleLowerCase('it'));
+  input.setCustomValidity(!name?'Inserisci un nome.':duplicate?'Questa lavorazione è già presente.':'');
+  if(!input.reportValidity())return null;
+  return name;
+}
+function renderEditor(){
+  const group=$('editRows');group.replaceChildren();
+  if(!canEdit())return;
+  for(const t of tasks(dataStore)){
+    const form=elem('form');form.className='manageRow';
+    const input=elem('input');input.type='text';input.maxLength=90;input.value=t.name;input.required=true;
+    input.setAttribute('aria-label','Nome lavorazione '+t.name);input.oninput=()=>input.setCustomValidity('');
+    const save=elem('button','Salva');save.type='submit';
+    const del=elem('button','Elimina');del.type='button';del.className='danger';
+    form.onsubmit=e=>{
+      e.preventDefault();if(!canEdit())return;
+      const current=dataStore.get(taskKey(t.id)),name=validName(input,t.id);if(!name||!current)return;
+      run('rename',{p_task:t.id,p_name:name});
+    };
+    del.onclick=()=>{
+      if(!canEdit()||!confirm('Eliminare «'+t.name+'» e le relative spunte da questo cantiere?'))return;
+      run('remove',{p_task:t.id});
+    };
+    form.append(input,save,del);group.append(form);
+  }
+}
+function refresh(){renderBoard();renderEditor();}
+$('gridMode').onclick=()=>{mode='grid';renderBoard();};$('unitMode').onclick=()=>{mode='unit';renderBoard();};
+$('jumpForm').onsubmit=e=>{
+  e.preventDefault();
+  const n=$('jumpUnit').valueAsNumber,scroll=$('board').querySelector('.scroll');
+  if(!scroll||!Number.isInteger(n)||n<1||n>$('unit').options.length)return;
+  $('unit').selectedIndex=n-1;
+  scroll.scrollLeft=(n-1)*unitWidth;
+  refreshGridWindow?.();
+  scroll.focus({preventScroll:true});
+};
+
+$('unit').onchange=renderBoard;$('pending').onchange=renderBoard;
+$('exit').onclick=()=>leave?.();
+$('newTask').oninput=e=>e.target.setCustomValidity('');
+$('addForm').onsubmit=async e=>{
+  e.preventDefault();if(!canEdit())return;
+  const input=$('newTask'),name=validName(input);if(!name)return;
+  const bytes=crypto.getRandomValues(new Uint8Array(16));
+  bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;
+  const hex=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+  const id=[hex.slice(0,8),hex.slice(8,12),hex.slice(12,16),hex.slice(16,20),hex.slice(20)].join('-');
+  if(await run('add',{p_task:id,p_name:name}))input.value='';
+};
+function showResult(result){
+  const previous=$('unit').value;
+  active.units=result.units.map(u=>({id:u.id,name:u.codice}));
+  $('unit').replaceChildren(...active.units.map(u=>option(u.id,u.name)));
+  if(active.units.some(u=>u.id===previous))$('unit').value=previous;
+  dataStore=new Map();
+  rows=result.tasks;
+  for(const t of rows){
+    dataStore.set(taskKey(t.id),t);
+    for(const unit of t.done)dataStore.set(cellKey(t.id,unit),true);
+  }
+  manage=result.manage;check=result.check;
+  $('interactive').hidden=false;
+  $('message').textContent=manage?'Gestione tabella':check?'Aggiornamento spunte':'Sola lettura';
+  refresh();
+}
+let lastResult='';
+async function run(action,params={}){
+  if(busy||!active)return false;
+  busy=true;$('interactive').inert=true;$('site').disabled=true;$('reload').disabled=true;
+  try{
+    const result=await rpc({p_action:action,p_customer:active.customer,p_site:active.site,...params});
+    busy=false;
+    const serialized=JSON.stringify(result);
+    if(serialized!==lastResult||action!=='read'||$('interactive').hidden){showResult(result);lastResult=serialized;}
+    return true;
+  }catch(err){
+    $('message').textContent='Aggiornamento non riuscito. '+err.message;
+    $('interactive').hidden=true;lastResult='';return false;
+  }finally{busy=false;$('interactive').inert=false;$('site').disabled=false;$('reload').disabled=false;}
+}
+function selectSite(){
+  active=sites[Number($('site').value)];lastResult='';
+  $('board').replaceChildren();$('unit').replaceChildren();$('newTask').value='';$('newTask').setCustomValidity('');
+  $('jumpUnit').value='';$('edit').open=false;$('interactive').hidden=true;
+  $('message').textContent='Apertura cantiere…';return run('read');
+}
+let initialTarget;
+async function loadSites(){
+  if(busy)return;
+  busy=true;$('reload').disabled=true;$('site').disabled=true;
+  try{
+    sites=await rpc({p_action:'list'});$('site').replaceChildren(...sites.map((s,i)=>option(i,s.name)));
+    if(!sites.length){$('message').textContent='Nessun cantiere nell’archivio condiviso.';return;}
+    const i=sites.findIndex(s=>s.customer===initialTarget?.customer&&s.site===initialTarget?.site);
+    $('site').selectedIndex=Math.max(i,0);
+  }catch(e){$('message').textContent='Impossibile aprire i cantieri. '+e.message;return;}
+  finally{busy=false;$('reload').disabled=false;$('site').disabled=false;}
+  await selectSite();
+}
+window.startSiteWork=(request,onExit,target)=>{
+  rpc=request;leave=onExit;initialTarget=target;
+  $('site').onchange=selectSite;$('reload').onclick=()=>active?run('read'):loadSites();
+  loadSites();
+  setInterval(()=>{if(active&&!busy&&!document.hidden&&!$('edit').open&&!$('interactive').hidden)run('read');},15000);
+};
+window.addEventListener('resize',()=>{refreshGridWindow?.();updateHint();});
+</script></body></html>

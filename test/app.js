@@ -158,7 +158,7 @@
   }
   const memberPermissionLabels=[
     ['is_admin','Amministratore',false],['is_titular','Titolare: vede i rapportini del gruppo',false],['can_manage_members','Gestisce gli accessi',false],
-    ['can_view_clients','Visualizza clienti e cantieri',true],['can_edit_clients','Modifica clienti e cantieri',false],['can_delete_clients','Elimina clienti',false],
+    ['can_view_clients','Visualizza clienti e cantieri',true],['can_edit_clients','Modifica clienti e cantieri',false],['can_delete_clients','Elimina clienti',false],['can_check_site_work','Aggiorna spunte cantiere',false],['can_manage_site_work','Gestisci tabella lavori',false],
     ['can_view_photos','Visualizza foto condivise',false],['can_add_photos','Aggiunge e gestisce le proprie foto',false],['can_manage_photos','Gestisce tutte le foto',false],
     ['can_write_reports','Inserisce e modifica i propri rapportini',true],['can_view_team_reports','Visualizza i rapportini del gruppo',false],['can_use_utilities','Usa le utility',true]
   ];
@@ -389,12 +389,13 @@
       const customerPhotos=el('button','mini-button',`Foto cliente${c.fotoData?.length?` · ${c.fotoData.length}`:''}`);customerPhotos.onclick=()=>openPhotoManager(c.id,null);
       if(puoModificareClienti()){const siteBtn=el('button','mini-button','＋ Cantiere');siteBtn.onclick=()=>addSite(c.id);actions.append(siteBtn);}
       if(puoEliminareClienti()){const del=el('button','mini-button danger','Elimina');del.onclick=()=>deleteCustomer(c.id);actions.append(del);}
+      if(!c.cantieri.length&&canOpenWorkGrid()){const work=el('button','mini-button','Avanzamento');work.onclick=()=>openWorkGrid(c.id,'');actions.append(work);}
       actions.prepend(customerPhotos);head.append(name,actions);card.append(head);
       if(!c.cantieri.length)card.append(el('p','hint','Nessun cantiere: puoi registrare lavori presso il cliente e aggiungere qui le foto.'));
       for(const s of c.cantieri){
         const site=el('div','site-card'),top=el('div','row-between'),siteName=el('strong','',`${s.nome}${s.stato==='CHIUSO'?' · CHIUSO':''}`),buttons=el('div','row-actions');
         if(puoModificareClienti()){if(s.stato==='ATTIVO'){const room=el('button','mini-button','＋ Interno');room.onclick=()=>addRoom(c.id,s.id);const bulk=el('button','mini-button','Genera');bulk.onclick=()=>addRooms(c.id,s.id);const close=el('button','mini-button','Chiudi');close.onclick=()=>setSiteState(c.id,s.id,'CHIUSO');buttons.append(room,bulk,close);}else{const open=el('button','mini-button','Riapri');open.onclick=()=>setSiteState(c.id,s.id,'ATTIVO');buttons.append(open);}}
-        const panel=el('button','mini-button','Quadro');panel.onclick=()=>openPanel(c.id,s.id);const photo=el('button','mini-button',`Foto${s.fotoData?.length?` · ${s.fotoData.length}`:''}`);photo.onclick=()=>openPhotoManager(c.id,s.id);buttons.append(panel,photo);top.append(siteName,buttons);site.append(top);
+        const panel=el('button','mini-button','Quadro');panel.onclick=()=>openPanel(c.id,s.id);const photo=el('button','mini-button',`Foto${s.fotoData?.length?` · ${s.fotoData.length}`:''}`);photo.onclick=()=>openPhotoManager(c.id,s.id);buttons.append(panel,photo);if(canOpenWorkGrid()){const work=el('button','mini-button','Avanzamento');work.onclick=()=>openWorkGrid(c.id,s.id);buttons.append(work);}top.append(siteName,buttons);site.append(top);
         if(s.interni.length){const rooms=el('div','room-list');for(const r of s.interni){const tag=el('span','room-tag'),label=el('span','',r.codice);tag.append(label);if(puoModificareClienti()){const remove=el('button','mini-button danger','×');remove.type='button';remove.setAttribute('aria-label',`Rimuovi ${r.codice}`);remove.title='Rimuovi interno';remove.onclick=()=>deleteRoom(c.id,s.id,r.id);tag.append(remove);}rooms.append(tag);}site.append(rooms);}
         if(s.quadroElettrico?.length){const parts=el('div','room-list');for(const part of s.quadroElettrico){const tag=el('span','room-tag',`${part.quantita}× ${part.tipologia} · ${part.descrizione}`);parts.append(tag);}site.append(parts);}card.append(site);
       }
@@ -525,10 +526,28 @@
     finally{$('backup-file').value='';}
   }
   const deviceCatalog=deviceLabels;
-  function showUtilityHome(){if($('utility-home'))$('utility-home').hidden=false;if($('utility-detail'))$('utility-detail').hidden=true;}
+  function canOpenWorkGrid(){
+    const m=cloudMembership;
+    return m?.status==='active'&&m.can_use_utilities&&(m.can_view_clients||m.can_edit_clients||m.can_delete_clients);
+  }
+  function openWorkGrid(customer='',site=''){
+    if(!canOpenWorkGrid())return;
+    const workspace=cloudMembership.workspace_id,dialog=$('work-dialog'),frame=$('work-frame');
+    frame.onload=()=>{
+      if(!dialog.open||!frame.contentWindow.startSiteWork)return;
+      frame.contentWindow.startSiteWork(args=>{
+        if(!dialog.open||!canOpenWorkGrid()||cloudMembership.workspace_id!==workspace)throw Error('Sessione cambiata.');
+        return CloudRegistro.siteWork(workspace,args);
+      },()=>dialog.close(),{customer,site});
+    };
+    dialog.onclose=()=>{frame.onload=null;frame.removeAttribute('src');};
+    dialog.showModal();frame.src='./site-work.html?v=1';
+  }
+  $('open-work-grid').onclick=()=>openWorkGrid();
+  function showUtilityHome(){filterUtilityMenu();if($('utility-home'))$('utility-home').hidden=false;if($('utility-detail'))$('utility-detail').hidden=true;}
   function selectUtilityTab(name){$('utility-home').hidden=true;$('utility-detail').hidden=false;document.querySelectorAll('.utility-tab').forEach(b=>b.classList.toggle('active',b.dataset.utilityTab===name));document.querySelectorAll('.utility-panel').forEach(p=>p.classList.toggle('active',p.id===`utility-${name}`));}
   function openUtilityTool(name,target){selectUtilityTab(name);requestAnimationFrame(()=>{const node=$(target);if(node)node.scrollIntoView({behavior:'smooth',block:'start'});});}
-  function filterUtilityMenu(){const q=$('utility-search').value.trim().toLocaleLowerCase('it');let shown=0;document.querySelectorAll('.utility-menu-group').forEach(group=>{let groupShown=0;group.querySelectorAll('.utility-menu-item').forEach(item=>{const text=`${item.textContent} ${item.dataset.search||''}`.toLocaleLowerCase('it'),match=!q||text.includes(q);item.hidden=!match;if(match){groupShown++;shown++;}});group.hidden=groupShown===0;});$('utility-empty').hidden=shown>0;}
+  function filterUtilityMenu(){const q=$('utility-search').value.trim().toLocaleLowerCase('it');let shown=0;document.querySelectorAll('.utility-menu-group').forEach(group=>{let groupShown=0;group.querySelectorAll('.utility-menu-item').forEach(item=>{const text=`${item.textContent} ${item.dataset.search||''}`.toLocaleLowerCase('it'),match=(item.id!=='open-work-grid'||canOpenWorkGrid())&&(!q||text.includes(q));item.hidden=!match;if(match){groupShown++;shown++;}});group.hidden=groupShown===0;});$('utility-empty').hidden=shown>0;}
   const isUnipolarCable=item=>item.categoria?.toLocaleLowerCase('it')==='cavi'&&item.nome?.toLocaleLowerCase('it').includes('unipolare');
   const isCorrugatedTube=item=>item.categoria?.toLocaleLowerCase('it')==='tubi flessibili'&&item.nome?.toLocaleLowerCase('it').includes('corrugato');
   const usesBrandSeries=item=>['prese e comandi','frutti'].includes(item.categoria?.toLocaleLowerCase('it'))&&/(presa|interruttore|deviatore|invertitore|pulsante)/i.test(item.nome||'');
